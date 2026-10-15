@@ -3,6 +3,7 @@
 import React, { useRef } from 'react';
 import { Lease, Tenant, Property, Unit } from '@rental-saas/contracts';
 import { Printer, Download, X, Shield, FileCheck, CheckCircle2 } from 'lucide-react';
+import { RentoraLogo } from '../RentoraLogo';
 
 interface TenancyContractModalProps {
   lease: Lease;
@@ -169,23 +170,21 @@ export function TenancyContractModal({
             <div
               style={{
                 textAlign: 'center',
-                borderBottom: '2px solid #166534',
+                borderBottom: '2px solid #4f46e5',
                 paddingBottom: '18px',
                 marginBottom: '24px',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ textAlign: 'left', fontSize: '11px', color: '#475569' }}>
-                  <strong>UNITED ARAB EMIRATES</strong><br />
-                  GOVERNMENT OF DUBAI<br />
-                  LAND DEPARTMENT (EJARI)
+                <div style={{ textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <RentoraLogo size={36} showText={true} textSize={16} variant="dark" />
                 </div>
 
                 <div>
                   <div
                     style={{
                       display: 'inline-block',
-                      background: '#166534',
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)',
                       color: '#ffffff',
                       fontWeight: 800,
                       fontSize: '15px',
@@ -196,7 +195,7 @@ export function TenancyContractModal({
                   >
                     UNIFIED TENANCY CONTRACT
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#166534', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: '#4f46e5', marginTop: '4px' }}>
                     عقد الإيجار الموحد (دولة الإمارات العربية المتحدة)
                   </div>
                 </div>
@@ -212,8 +211,8 @@ export function TenancyContractModal({
             {/* Quick Badge Summary */}
             <div
               style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
+                background: '#eef2ff',
+                border: '1px solid #c7d2fe',
                 borderRadius: '8px',
                 padding: '12px 18px',
                 marginBottom: '20px',
@@ -225,19 +224,19 @@ export function TenancyContractModal({
               }}
             >
               <div>
-                <span style={{ color: '#166534', fontWeight: 600 }}>Contract Term:</span>{' '}
+                <span style={{ color: '#4f46e5', fontWeight: 600 }}>Contract Term:</span>{' '}
                 <strong>1 Year (Yearly Basis)</strong>
               </div>
               <div>
-                <span style={{ color: '#166534', fontWeight: 600 }}>Period:</span>{' '}
+                <span style={{ color: '#4f46e5', fontWeight: 600 }}>Period:</span>{' '}
                 <strong>{lease.startDate} to {lease.endDate}</strong>
               </div>
               <div>
-                <span style={{ color: '#166534', fontWeight: 600 }}>Payment Method:</span>{' '}
+                <span style={{ color: '#4f46e5', fontWeight: 600 }}>Payment Method:</span>{' '}
                 <strong>Bank Cheques (Once Every 3 Months)</strong>
               </div>
               <div>
-                <span style={{ color: '#166534', fontWeight: 600 }}>Cheques Count:</span>{' '}
+                <span style={{ color: '#4f46e5', fontWeight: 600 }}>Cheques Count:</span>{' '}
                 <strong>{numCheques} Post-Dated Cheques</strong>
               </div>
             </div>
@@ -246,7 +245,7 @@ export function TenancyContractModal({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
               {/* Landlord / Lessor */}
               <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px' }}>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: '#166534', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', marginBottom: '8px' }}>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', marginBottom: '8px' }}>
                   1. LESSOR / LANDLORD (الطرف الأول - المؤجر)
                 </div>
                 <table style={{ width: '100%', fontSize: '12px' }}>
@@ -277,7 +276,7 @@ export function TenancyContractModal({
 
               {/* Tenant / Lessee */}
               <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px' }}>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: '#166534', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', marginBottom: '8px' }}>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#4f46e5', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', marginBottom: '8px' }}>
                   2. LESSEE / TENANT (الطرف الثاني - المستأجر)
                 </div>
                 <table style={{ width: '100%', fontSize: '12px' }}>
@@ -343,7 +342,7 @@ export function TenancyContractModal({
             {/* Financial Value & Cheque Payment Schedule */}
             <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', padding: '14px', marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px', marginBottom: '12px' }}>
-                <div style={{ fontWeight: 700, fontSize: '13px', color: '#166534' }}>
+                <div style={{ fontWeight: 700, fontSize: '13px', color: '#4f46e5' }}>
                   4. RENT, VAT, AND CHEQUE PAYMENT SCHEDULE (الأجرة وجدول الدفعات)
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b' }}>
@@ -373,13 +372,13 @@ export function TenancyContractModal({
                 </div>
                 <div>
                   <span style={{ color: '#64748b' }}>UAE VAT (5% FTA):</span><br />
-                  <strong style={{ fontSize: '13.5px', color: '#166534' }}>
+                  <strong style={{ fontSize: '13.5px', color: '#4f46e5' }}>
                     AED {vatAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </strong>
                 </div>
                 <div>
                   <span style={{ color: '#64748b' }}>Total Annual Payable:</span><br />
-                  <strong style={{ fontSize: '14px', color: '#15803d', textDecoration: 'underline' }}>
+                  <strong style={{ fontSize: '14px', color: '#4f46e5', textDecoration: 'underline' }}>
                     AED {totalAnnualWithVat.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </strong>
                 </div>
@@ -413,7 +412,7 @@ export function TenancyContractModal({
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', color: '#475569' }}>
                         Every 3 Months
                       </td>
-                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#166534' }}>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#4f46e5' }}>
                         {c.dueDate}
                       </td>
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontFamily: 'monospace' }}>
@@ -422,10 +421,10 @@ export function TenancyContractModal({
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>
                         AED {chequeBase.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
-                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', color: '#166534' }}>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', color: '#4f46e5' }}>
                         AED {chequeVat.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
-                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#15803d' }}>
+                      <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#4f46e5' }}>
                         AED {chequeTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
@@ -462,7 +461,7 @@ export function TenancyContractModal({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginTop: '28px', paddingTop: '16px', borderTop: '2px solid #e2e8f0' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: 'cursive', fontSize: '18px', color: '#166534' }}>Sultan Al Nuaimi</span>
+                  <span style={{ fontFamily: 'cursive', fontSize: '18px', color: '#4f46e5' }}>Sultan Al Nuaimi</span>
                 </div>
                 <div style={{ borderTop: '1px dashed #94a3b8', paddingTop: '6px', fontSize: '11.5px', fontWeight: 600 }}>
                   First Party (Landlord / Lessor)<br />
@@ -486,7 +485,7 @@ export function TenancyContractModal({
                 <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <div
                     style={{
-                      border: '2px solid #166534',
+                      border: '2px solid #4f46e5',
                       borderRadius: '50%',
                       width: '46px',
                       height: '46px',
@@ -495,7 +494,7 @@ export function TenancyContractModal({
                       justifyContent: 'center',
                       fontSize: '9px',
                       fontWeight: 800,
-                      color: '#166534',
+                      color: '#4f46e5',
                       textAlign: 'center',
                       lineHeight: 1.1,
                     }}

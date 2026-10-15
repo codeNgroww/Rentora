@@ -9,12 +9,12 @@
       "ownerId": "a1111111-1111-4111-8111-111111111111",
       "vatSettings": {
         "enabled": true,
-        "defaultRate": 5,
-        "trn": "100293849500003",
+        "defaultRate": 7.5,
+        "trn": "100999888777003",
         "calculationMode": "exclusive"
       },
       "createdAt": "2026-01-01T00:00:00Z",
-      "updatedAt": "2026-10-14T10:00:00Z"
+      "updatedAt": "2026-10-15T13:01:16.681Z"
     }
   ],
   "members": [
@@ -917,6 +917,26 @@
   ],
   "expenses": [
     {
+      "id": "e-1792069276668",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "propertyId": "p1",
+      "unitId": null,
+      "categoryId": "c1",
+      "vendorId": null,
+      "description": "Emergency Electrical Fix",
+      "amount": "500.00",
+      "currency": "AED",
+      "expenseDate": "2026-10-14",
+      "status": "voided",
+      "paymentMethod": "bank_transfer",
+      "paidAt": "2026-10-14T10:00:00Z",
+      "reference": "",
+      "notes": "",
+      "createdAt": "2026-10-15T13:01:16.668Z",
+      "updatedAt": "2026-10-15T13:01:16.671Z",
+      "voidReason": "Duplicate entry detected"
+    },
+    {
       "id": "e1",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
       "propertyId": "p1",
@@ -1072,15 +1092,80 @@
       "periodEnd": "2026-10-31",
       "dueDate": "2026-08-01",
       "amount": "36250.00",
-      "paidAmount": "0.00",
-      "outstandingAmount": "36250.00",
-      "status": "overdue",
+      "paidAmount": "36250.00",
+      "outstandingAmount": "0.00",
+      "status": "paid",
       "notes": "Cheque 4 of 4 (Quarterly rent PDC - 3 months overdue)",
       "createdAt": "2026-09-25T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
+      "updatedAt": "2026-10-15T13:01:16.674Z"
     }
   ],
   "payments": [
+    {
+      "id": "pay-1792069276681",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "tenantId": "t1",
+      "propertyId": "p1",
+      "unitId": "u101",
+      "amount": "20000.00",
+      "currency": "AED",
+      "paymentDate": "2026-10-15",
+      "paymentMethod": "bank_transfer",
+      "reference": "",
+      "notes": "",
+      "subtotalAmount": "20000.00",
+      "vatRate": 7.5,
+      "vatAmount": "1500.00",
+      "totalAmount": "21500.00",
+      "allocations": [],
+      "createdAt": "2026-10-15T13:01:16.681Z"
+    },
+    {
+      "id": "pay-1792069276681",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "tenantId": "t1",
+      "propertyId": "p1",
+      "unitId": "u101",
+      "amount": "10000.00",
+      "currency": "AED",
+      "paymentDate": "2026-10-15",
+      "paymentMethod": "bank_transfer",
+      "reference": "",
+      "notes": "",
+      "subtotalAmount": "10000.00",
+      "vatRate": 5,
+      "vatAmount": "500.00",
+      "totalAmount": "10500.00",
+      "allocations": [],
+      "createdAt": "2026-10-15T13:01:16.681Z"
+    },
+    {
+      "id": "pay-1792069276674",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "tenantId": "t3",
+      "propertyId": "p2",
+      "unitId": "u201",
+      "amount": "36250.00",
+      "currency": "AED",
+      "paymentDate": "2026-10-14",
+      "paymentMethod": "bank_transfer",
+      "reference": "",
+      "notes": "",
+      "subtotalAmount": "36250.00",
+      "vatRate": 5,
+      "vatAmount": "1812.50",
+      "totalAmount": "38062.50",
+      "allocations": [
+        {
+          "id": "pa-1792069276674-lvte",
+          "paymentId": "pay-1792069276674",
+          "rentChargeId": "rc3",
+          "amount": "36250.00",
+          "createdAt": "2026-10-15T13:01:16.674Z"
+        }
+      ],
+      "createdAt": "2026-10-15T13:01:16.674Z"
+    },
     {
       "id": "pay1",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
@@ -1112,6 +1197,13 @@
       "rentChargeId": "rc1",
       "amount": "21250.00",
       "createdAt": "2026-10-02T00:00:00Z"
+    },
+    {
+      "id": "pa-1792069276674-lvte",
+      "paymentId": "pay-1792069276674",
+      "rentChargeId": "rc3",
+      "amount": "36250.00",
+      "createdAt": "2026-10-15T13:01:16.674Z"
     }
   ],
   "notifications": [
@@ -1139,6 +1231,110 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud-1792069276681",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "actorId": "system",
+      "actorName": "Authorized User",
+      "action": "PAYMENT_RECORDED",
+      "entity": "Payment",
+      "entityId": "pay-1792069276681",
+      "timestamp": "2026-10-15T13:01:16.681Z",
+      "changes": {
+        "amount": {
+          "before": null,
+          "after": "20000.00"
+        },
+        "tenantId": {
+          "before": null,
+          "after": "t1"
+        }
+      }
+    },
+    {
+      "id": "aud-1792069276681",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "actorId": "system",
+      "actorName": "Authorized User",
+      "action": "PAYMENT_RECORDED",
+      "entity": "Payment",
+      "entityId": "pay-1792069276681",
+      "timestamp": "2026-10-15T13:01:16.681Z",
+      "changes": {
+        "amount": {
+          "before": null,
+          "after": "10000.00"
+        },
+        "tenantId": {
+          "before": null,
+          "after": "t1"
+        }
+      }
+    },
+    {
+      "id": "aud-1792069276674",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "actorId": "system",
+      "actorName": "Authorized User",
+      "action": "PAYMENT_RECORDED",
+      "entity": "Payment",
+      "entityId": "pay-1792069276674",
+      "timestamp": "2026-10-15T13:01:16.674Z",
+      "changes": {
+        "amount": {
+          "before": null,
+          "after": "36250.00"
+        },
+        "tenantId": {
+          "before": null,
+          "after": "t3"
+        }
+      }
+    },
+    {
+      "id": "aud-1792069276671",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "actorId": "system",
+      "actorName": "Authorized User",
+      "action": "EXPENSE_VOIDED",
+      "entity": "Expense",
+      "entityId": "e-1792069276668",
+      "timestamp": "2026-10-15T13:01:16.671Z",
+      "changes": {
+        "status": {
+          "before": "paid",
+          "after": "voided"
+        },
+        "reason": {
+          "before": null,
+          "after": "Duplicate entry detected"
+        }
+      }
+    },
+    {
+      "id": "aud-1792069276670",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "actorId": "system",
+      "actorName": "Authorized User",
+      "action": "EXPENSE_CREATED",
+      "entity": "Expense",
+      "entityId": "e-1792069276668",
+      "timestamp": "2026-10-15T13:01:16.670Z",
+      "changes": {
+        "description": {
+          "before": null,
+          "after": "Emergency Electrical Fix"
+        },
+        "amount": {
+          "before": null,
+          "after": "500.00"
+        },
+        "status": {
+          "before": null,
+          "after": "paid"
+        }
+      }
+    },
     {
       "id": "aud1",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
@@ -1180,5 +1376,5 @@
       }
     }
   ],
-  "updatedAt": "2026-10-15T12:44:59.988Z"
+  "updatedAt": "2026-10-15T13:01:16.681Z"
 }

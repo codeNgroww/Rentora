@@ -172,7 +172,7 @@ export function BuildingView({
 
           <button
             className="btn btn-secondary btn-sm"
-            style={{ fontWeight: 600, color: '#166534', borderColor: '#bbf7d0', background: '#f0fdf4' }}
+            style={{ fontWeight: 600, color: '#4f46e5', borderColor: '#c7d2fe', background: '#eef2ff' }}
             onClick={() => alert(`Rent collection cadence configured for ${property.name} at standard AED rates.`)}
           >
             <DollarSign size={14} />
@@ -202,7 +202,7 @@ export function BuildingView({
               fontWeight: 700,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'all' ? '#166534' : '#ffffff',
+              background: filterStatus === 'all' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'all' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -219,7 +219,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'occupied' ? '#166534' : '#ffffff',
+              background: filterStatus === 'occupied' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'occupied' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -236,7 +236,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'vacant' ? '#166534' : '#ffffff',
+              background: filterStatus === 'vacant' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'vacant' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -253,7 +253,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'has_pending' ? '#166534' : '#ffffff',
+              background: filterStatus === 'has_pending' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'has_pending' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -270,7 +270,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'paid' ? '#166534' : '#ffffff',
+              background: filterStatus === 'paid' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'paid' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -287,7 +287,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'partial' ? '#166534' : '#ffffff',
+              background: filterStatus === 'partial' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'partial' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -304,7 +304,7 @@ export function BuildingView({
               fontWeight: 600,
               cursor: 'pointer',
               border: 'none',
-              background: filterStatus === 'overdue' ? '#166534' : '#ffffff',
+              background: filterStatus === 'overdue' ? '#4f46e5' : '#ffffff',
               color: filterStatus === 'overdue' ? '#ffffff' : '#475569',
               boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}
@@ -376,20 +376,20 @@ export function BuildingView({
         {/* Roof Canopy */}
         <div
           style={{
-            background: 'linear-gradient(180deg, #166534 0%, #14532d 100%)',
+            background: 'linear-gradient(180deg, #4f46e5 0%, #312e81 100%)',
             clipPath: 'polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%)',
             padding: '16px 20px',
             textAlign: 'center',
             color: '#ffffff',
             borderTopLeftRadius: '16px',
             borderTopRightRadius: '16px',
-            boxShadow: '0 4px 14px rgba(22, 101, 52, 0.25)',
+            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.3)',
           }}
         >
           <div style={{ fontSize: '16px', fontWeight: 800, letterSpacing: '0.2px' }}>
             {property.name}
           </div>
-          <div style={{ fontSize: '11.5px', color: '#86efac', fontWeight: 600 }}>
+          <div style={{ fontSize: '11.5px', color: '#c7d2fe', fontWeight: 600 }}>
             {occupiedCount}/{totalCount} rooms occupied
           </div>
         </div>
@@ -397,9 +397,9 @@ export function BuildingView({
         {/* Building Body Container */}
         <div
           style={{
-            borderLeft: '4px solid #166534',
-            borderRight: '4px solid #166534',
-            background: '#edf7ed',
+            borderLeft: '4px solid #4f46e5',
+            borderRight: '4px solid #4f46e5',
+            background: '#eef2ff',
             padding: '10px 10px 0',
           }}
         >
@@ -425,7 +425,7 @@ export function BuildingView({
                 <div
                   style={{
                     width: '64px',
-                    background: '#166534',
+                    background: '#4f46e5',
                     color: '#ffffff',
                     borderRadius: '8px',
                     display: 'flex',
@@ -676,7 +676,7 @@ export function BuildingView({
         <div
           style={{
             height: '18px',
-            background: 'linear-gradient(180deg, #166534 0%, #0f3d20 100%)',
+            background: 'linear-gradient(180deg, #4f46e5 0%, #1e1b4b 100%)',
             borderBottomLeftRadius: '12px',
             borderBottomRightRadius: '12px',
             boxShadow: '0 6px 14px rgba(0,0,0,0.15)',
@@ -815,7 +815,7 @@ export function BuildingView({
           <div className="modal-content" style={{ maxWidth: '440px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Key size={18} color="#166534" />
+                <Key size={18} color="#4f46e5" />
                 <h3 className="modal-title">
                   {selectedUnit.isShop ? selectedUnit.unitNumber : `Unit ${selectedUnit.unitNumber}`} Details
                 </h3>

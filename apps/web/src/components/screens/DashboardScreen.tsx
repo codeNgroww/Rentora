@@ -234,7 +234,7 @@ export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
                         cx={groupX + 26}
                         cy={svgHeight - 30 - ((d.net) / maxBarVal) * 160}
                         r={isHovered ? 5 : 4}
-                        fill="#10b981"
+                        fill="#0284c7"
                         stroke="#ffffff"
                         strokeWidth="2"
                       />
@@ -246,7 +246,7 @@ export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
                         textAnchor="middle"
                         fontSize="11.5"
                         fontWeight={isHovered ? '700' : '600'}
-                        fill={isHovered ? '#166534' : '#475569'}
+                        fill={isHovered ? '#4f46e5' : '#475569'}
                       >
                         Q{i + 1}
                       </text>
@@ -266,7 +266,7 @@ export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
                           <text x={groupX + 26} y={svgHeight - 30 - rentH - 30} textAnchor="middle" fontSize="10" fill="#e2e8f0">
                             Rent: AED {d.rent.toLocaleString()}
                           </text>
-                          <text x={groupX + 26} y={svgHeight - 30 - rentH - 16} textAnchor="middle" fontSize="10" fill="#4ade80" fontWeight="700">
+                          <text x={groupX + 26} y={svgHeight - 30 - rentH - 16} textAnchor="middle" fontSize="10" fill="#38bdf8" fontWeight="700">
                             Net: AED {d.net.toLocaleString()}
                           </text>
                         </g>
@@ -280,7 +280,7 @@ export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '12px', marginTop: '6px', fontSize: '12px', color: '#64748b' }}>
               <span>Cycle: <strong>1-Year Tenancy Contracts</strong></span>
               <span>Cadence: <strong>Once Every 3 Months (4 Cheques)</strong></span>
-              <span style={{ color: '#166534', fontWeight: 600 }}>PDC Cheque Clearance Rate: <strong>94.2%</strong></span>
+              <span style={{ color: '#4f46e5', fontWeight: 600 }}>PDC Cheque Clearance Rate: <strong>94.2%</strong></span>
             </div>
           </div>
         </div>
