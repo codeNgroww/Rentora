@@ -1,0 +1,15 @@
+# Netlify configuration for Rentora Monorepo (Next.js Frontend)
+
+[build]
+  # Build contracts dependency first, then the Next.js web application
+  command = "pnpm --filter @rental-saas/contracts build && pnpm --filter @rental-saas/web build"
+  publish = "apps/web/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Client-side fallback rule if deployed as static export
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
