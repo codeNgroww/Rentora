@@ -17,6 +17,8 @@ import {
   VatSettings,
 } from '@rental-saas/contracts';
 
+import { clientDemoStore } from './demoStore';
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:4000/api/v1');
@@ -43,7 +45,16 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const json = await res.json();
     return json.data;
   } catch (error) {
-    console.warn(`[API] fallback or error on ${endpoint}:`, error);
+    // If backend is unreachable or returns error (e.g. on Netlify demo deployment),
+    // gracefully serve from client-side DemoStore so demo works 100% out-of-the-box!
+    try {
+      const demoResult = clientDemoStore.handle<T>(endpoint, options);
+      if (demoResult !== null && demoResult !== undefined) {
+        return demoResult;
+      }
+    } catch (fallbackErr) {
+      console.warn('[DemoStore Fallback Error]:', fallbackErr);
+    }
     throw error;
   }
 }

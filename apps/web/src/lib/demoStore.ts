@@ -118,21 +118,25 @@ class DemoStore {
       const arrearsTotal = this.state.rentCharges
         .filter((c) => c.status === 'overdue' || c.status === 'partially_paid')
         .reduce((sum, c) => sum + parseFloat(c.outstandingAmount || c.amount), 0);
-      const arrearsCount = this.state.rentCharges.filter(
-        (c) => c.status === 'overdue'
-      ).length;
+      const occupiedUnits = this.state.units.filter((u) => u.status === 'occupied').length;
 
       const summary: DashboardSummary = {
-        propertyCount: this.state.properties.length,
-        unitCount: this.state.units.length,
-        occupancyRate: 85.3,
-        rentCollected,
-        expensesPaid,
-        netCashFlow: rentCollected - expensesPaid,
-        arrearsTotal,
-        arrearsCount,
+        workspaceId: this.state.workspace.id,
         period: params.get('period') || '2026-10',
         currency: 'AED',
+        propertyCount: this.state.properties.length,
+        totalUnits: this.state.units.length,
+        occupiedUnits,
+        vacantUnits: this.state.units.length - occupiedUnits,
+        occupancyRate: this.state.units.length > 0 ? (occupiedUnits / this.state.units.length) * 100 : 85.3,
+        rentDue: (rentCollected + arrearsTotal).toFixed(2),
+        rentCollected: rentCollected.toFixed(2),
+        rentOutstanding: arrearsTotal.toFixed(2),
+        expensesPaid: expensesPaid.toFixed(2),
+        pendingExpenses: '420.00',
+        netCashFlow: (rentCollected - expensesPaid).toFixed(2),
+        categoryBreakdown: INITIAL_DASHBOARD_SUMMARY.categoryBreakdown,
+        recentActivity: INITIAL_DASHBOARD_SUMMARY.recentActivity,
       };
       return summary as unknown as T;
     }
@@ -288,11 +292,6 @@ class DemoStore {
           paidAt: body.status === 'paid' ? new Date().toISOString() : null,
           reference: body.reference || '',
           notes: body.notes || '',
-          categoryName: cat?.name || 'Uncategorized',
-          categoryColor: cat?.color || '#10b981',
-          propertyName: prop?.name || 'Marina Crown Tower',
-          unitNumber: unit ? unit.unitNumber : null,
-          vendorName: vendor ? vendor.name : null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -466,20 +465,40 @@ class DemoStore {
     // --- Reports ---
     if (path === '/reports/summary') {
       const rep: FinancialReportSummary = {
-        totalRevenue: 21250.0,
-        totalExpenses: 9840.5,
-        netIncome: 11409.5,
-        outstandingReceivables: 36250.0,
-        byCategory: [
-          { categoryName: 'Utilities (DEWA/ADDC)', totalAmount: 3240.5, percentage: 33.0 },
-          { categoryName: 'Service Charges', totalAmount: 4650.0, percentage: 47.0 },
-          { categoryName: 'Cleaning & Sanitation', totalAmount: 1100.0, percentage: 11.0 },
-          { categoryName: 'Maintenance & Repairs', totalAmount: 850.0, percentage: 9.0 },
-        ],
-        byProperty: [
-          { propertyName: 'Marina Crown Tower', totalRevenue: 21250.0, totalExpenses: 4090.5, netOperatingIncome: 17159.5 },
-          { propertyName: 'Downtown Luxury Heights', totalRevenue: 0.0, totalExpenses: 1100.0, netOperatingIncome: -1100.0 },
-          { propertyName: 'Corniche View Residences', totalRevenue: 0.0, totalExpenses: 4650.0, netOperatingIncome: -4650.0 },
+        periodLabel: 'October 2026',
+        currency: 'AED',
+        totalIncome: '21250.00',
+        totalExpenses: '9840.50',
+        netCashFlow: '11409.50',
+        rentArrearsTotal: '36250.00',
+        propertiesSummary: [
+          {
+            propertyId: 'p1',
+            propertyName: 'Marina Crown Tower',
+            income: '21250.00',
+            expenses: '4090.50',
+            net: '17159.50',
+            occupiedUnits: 27,
+            totalUnits: 31,
+          },
+          {
+            propertyId: 'p2',
+            propertyName: 'Downtown Luxury Heights',
+            income: '0.00',
+            expenses: '1100.00',
+            net: '-1100.00',
+            occupiedUnits: 1,
+            totalUnits: 2,
+          },
+          {
+            propertyId: 'p3',
+            propertyName: 'Corniche View Residences',
+            income: '0.00',
+            expenses: '4650.00',
+            net: '-4650.00',
+            occupiedUnits: 1,
+            totalUnits: 1,
+          },
         ],
       };
       return rep as unknown as T;
@@ -488,13 +507,16 @@ class DemoStore {
     if (path === '/reports/rent-arrears') {
       const arrears: RentArrearsItem[] = [
         {
-          tenantId: 't3',
-          tenantName: 'Elena Rostova',
-          tenantPhone: '+971 56 772 1993',
+          rentChargeId: 'rc3',
+          propertyId: 'p2',
           propertyName: 'Downtown Luxury Heights',
           unitNumber: '2001',
-          overdueAmount: '36250.00',
+          tenantName: 'Elena Rostova',
+          tenantPhone: '+971 56 772 1993',
           dueDate: '2026-08-01',
+          amountDue: '36250.00',
+          amountPaid: '0.00',
+          outstandingBalance: '36250.00',
           daysOverdue: 75,
         },
       ];
