@@ -16,13 +16,22 @@ import {
 } from 'lucide-react';
 import { DashboardSummary } from '@rental-saas/contracts';
 import { INITIAL_DASHBOARD_SUMMARY } from '../../lib/mockData';
+import { TimeframeFilter } from '../../lib/dateFilters';
+import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface DashboardScreenProps {
   summary: DashboardSummary | null;
   onNavigate: (tab: string) => void;
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
 }
 
-export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
+export function DashboardScreen({
+  summary,
+  onNavigate,
+  timeframeFilter,
+  onTimeframeChange,
+}: DashboardScreenProps) {
   const [hoveredQuarter, setHoveredQuarter] = useState<number | null>(null);
 
   // Fallback gracefully so dashboard never hangs on empty loading screen
@@ -48,6 +57,33 @@ export function DashboardScreen({ summary, onNavigate }: DashboardScreenProps) {
 
   return (
     <div>
+      {/* Timeframe Filter Banner */}
+      {timeframeFilter && onTimeframeChange && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '12px 18px',
+            marginBottom: '20px',
+            flexWrap: 'wrap',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+              Portfolio Metrics Timeframe
+            </div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>
+              Viewing financial performance for <strong style={{ color: '#0284c7' }}>{timeframeFilter.label}</strong> ({timeframeFilter.startDate} to {timeframeFilter.endDate})
+            </div>
+          </div>
+          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+        </div>
+      )}
       {/* Alert banner if rent is outstanding */}
       {rentOutstanding > 0 && (
         <div

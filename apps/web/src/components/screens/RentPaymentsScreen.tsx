@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
 import { RentCharge, Payment, Tenant, Property, Unit } from '@rental-saas/contracts';
+import { TimeframeFilter, isDateInRange } from '../../lib/dateFilters';
+import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface RentPaymentsScreenProps {
   charges: RentCharge[];
@@ -10,6 +12,8 @@ interface RentPaymentsScreenProps {
   tenants: Tenant[];
   properties: Property[];
   units: Unit[];
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
   onOpenRecordPayment: () => void;
   onEditCharge?: (charge: RentCharge) => void;
   onDeleteCharge?: (id: string) => Promise<void>;
@@ -23,6 +27,8 @@ export function RentPaymentsScreen({
   tenants,
   properties,
   units,
+  timeframeFilter,
+  onTimeframeChange,
   onOpenRecordPayment,
   onEditCharge,
   onDeleteCharge,
@@ -31,9 +37,17 @@ export function RentPaymentsScreen({
 }: RentPaymentsScreenProps) {
   const [activeTab, setActiveTab] = useState<'charges' | 'payments'>('charges');
 
-  const totalDue = charges.reduce((acc, c) => acc + parseFloat(c.amount), 0);
-  const totalPaid = charges.reduce((acc, c) => acc + parseFloat(c.paidAmount || '0'), 0);
-  const totalOverdue = charges
+  const filteredCharges = timeframeFilter
+    ? charges.filter((c) => isDateInRange(c.dueDate, timeframeFilter.startDate, timeframeFilter.endDate))
+    : charges;
+
+  const filteredPayments = timeframeFilter
+    ? payments.filter((p) => isDateInRange(p.paymentDate, timeframeFilter.startDate, timeframeFilter.endDate))
+    : payments;
+
+  const totalDue = filteredCharges.reduce((acc, c) => acc + parseFloat(c.amount), 0);
+  const totalPaid = filteredCharges.reduce((acc, c) => acc + parseFloat(c.paidAmount || '0'), 0);
+  const totalOverdue = filteredCharges
     .filter((c) => c.status === 'overdue')
     .reduce((acc, c) => acc + parseFloat(c.outstandingAmount || '0'), 0);
 
@@ -55,15 +69,19 @@ export function RentPaymentsScreen({
             className={`btn btn-sm ${activeTab === 'charges' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('charges')}
           >
-            Rent Due & Charges ({charges.length})
+            Rent Due & Charges ({filteredCharges.length})
           </button>
           <button
             className={`btn btn-sm ${activeTab === 'payments' ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setActiveTab('payments')}
           >
-            Payment Receipts ({payments.length})
+            Payment Receipts ({filteredPayments.length})
           </button>
         </div>
+
+        {timeframeFilter && onTimeframeChange && (
+          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+        )}
 
         <button id="record-rent-payment-btn" className="btn btn-primary btn-sm" onClick={onOpenRecordPayment}>
           <Plus size={14} />
@@ -126,7 +144,7 @@ export function RentPaymentsScreen({
                   </tr>
                 </thead>
                 <tbody>
-                  {charges.map((c) => {
+                  {filteredCharges.map((c) => {
                     const tenant = tenants.find((t) => t.id === c.tenantId);
                     const prop = properties.find((p) => p.id === c.propertyId);
                     const unit = units.find((u) => u.id === c.unitId);
@@ -218,7 +236,7 @@ export function RentPaymentsScreen({
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((p) => {
+                  {filteredPayments.map((p) => {
                     const tenant = tenants.find((t) => t.id === p.tenantId);
                     return (
                       <tr key={p.id}>

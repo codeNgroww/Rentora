@@ -36,10 +36,12 @@ import {
   NotificationItem,
   AuditLogItem,
 } from '@rental-saas/contracts';
+import { TimeframeFilter, getMonthlyRange } from '../lib/dateFilters';
 
 export default function Home() {
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [period, setPeriod] = useState<string>('2026-10');
+  const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>(getMonthlyRange(2026, 10));
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Data states
@@ -77,10 +79,13 @@ export default function Home() {
 
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
 
-  // Load initial data
-  const loadData = async () => {
+  // Load initial data with timeframe filtering
+  const loadData = async (tf: TimeframeFilter = timeframeFilter) => {
     setIsLoading(true);
     try {
+      const from = tf.startDate;
+      const to = tf.endDate;
+
       const [
         dashData,
         expData,
@@ -97,17 +102,17 @@ export default function Home() {
         notifData,
         auditData,
       ] = await Promise.all([
-        api.getDashboard(period).catch(() => null),
-        api.getExpenses().catch(() => []),
+        api.getDashboard(period, from, to).catch(() => null),
+        api.getExpenses({ from, to }).catch(() => []),
         api.getCategories().catch(() => []),
         api.getProperties().catch(() => []),
         api.getUnits().catch(() => []),
         api.getTenants().catch(() => []),
         api.getLeases().catch(() => []),
-        api.getRentCharges().catch(() => []),
-        api.getPayments().catch(() => []),
+        api.getRentCharges({ from, to }).catch(() => []),
+        api.getPayments({ from, to }).catch(() => []),
         api.getVendors().catch(() => []),
-        api.getFinancialSummary().catch(() => null),
+        api.getFinancialSummary(from, to).catch(() => null),
         api.getRentArrears().catch(() => []),
         api.getNotifications().catch(() => []),
         api.getAuditLogs().catch(() => []),
@@ -135,24 +140,32 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [period]);
+    loadData(timeframeFilter);
+  }, [timeframeFilter]);
+
+  const handleTimeframeChange = (tf: TimeframeFilter) => {
+    setTimeframeFilter(tf);
+    const padM = String(tf.month).padStart(2, '0');
+    setPeriod(`${tf.year}-${padM}`);
+  };
 
   // Period navigation
   const handlePrevMonth = () => {
     const [year, month] = period.split('-').map(Number);
     const date = new Date(year, month - 2, 1);
     const newY = date.getFullYear();
-    const newM = String(date.getMonth() + 1).padStart(2, '0');
-    setPeriod(`${newY}-${newM}`);
+    const newM = date.getMonth() + 1;
+    setPeriod(`${newY}-${String(newM).padStart(2, '0')}`);
+    setTimeframeFilter(getMonthlyRange(newY, newM));
   };
 
   const handleNextMonth = () => {
     const [year, month] = period.split('-').map(Number);
     const date = new Date(year, month, 1);
     const newY = date.getFullYear();
-    const newM = String(date.getMonth() + 1).padStart(2, '0');
-    setPeriod(`${newY}-${newM}`);
+    const newM = date.getMonth() + 1;
+    setPeriod(`${newY}-${String(newM).padStart(2, '0')}`);
+    setTimeframeFilter(getMonthlyRange(newY, newM));
   };
 
   // Expenses Actions
@@ -337,6 +350,8 @@ export default function Home() {
         <TopBar
           title={getPageTitle()}
           period={period}
+          timeframeFilter={timeframeFilter}
+          onTimeframeChange={handleTimeframeChange}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
           onOpenAddExpense={() => {
@@ -356,6 +371,8 @@ export default function Home() {
                 <DashboardScreen
                   summary={dashboardSummary}
                   onNavigate={setCurrentTab}
+                  timeframeFilter={timeframeFilter}
+                  onTimeframeChange={handleTimeframeChange}
                 />
               )}
 
@@ -366,6 +383,8 @@ export default function Home() {
                   properties={properties}
                   units={units}
                   period={period}
+                  timeframeFilter={timeframeFilter}
+                  onTimeframeChange={handleTimeframeChange}
                   onOpenAddModal={() => {
                     setEditingExpense(null);
                     setIsAddExpenseOpen(true);
@@ -382,6 +401,8 @@ export default function Home() {
                   properties={properties}
                   units={units}
                   period={period}
+                  timeframeFilter={timeframeFilter}
+                  onTimeframeChange={handleTimeframeChange}
                   onPrevMonth={handlePrevMonth}
                   onNextMonth={handleNextMonth}
                   onOpenAddProperty={() => {
@@ -435,6 +456,8 @@ export default function Home() {
                   tenants={tenants}
                   properties={properties}
                   units={units}
+                  timeframeFilter={timeframeFilter}
+                  onTimeframeChange={handleTimeframeChange}
                   onOpenRecordPayment={() => setIsRecordPaymentOpen(true)}
                   onEditCharge={handleEditCharge}
                   onDeleteCharge={handleDeleteCharge}
@@ -447,6 +470,8 @@ export default function Home() {
                 <ReportsScreen
                   summary={reportSummary}
                   arrears={rentArrears}
+                  timeframeFilter={timeframeFilter}
+                  onTimeframeChange={handleTimeframeChange}
                   onExportCsv={handleExportCsv}
                 />
               )}

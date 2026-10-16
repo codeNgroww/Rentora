@@ -27,7 +27,9 @@ export class RentController {
     @Headers('x-workspace-id') wsId?: string,
     @Query('status') status?: string,
     @Query('propertyId') propertyId?: string,
-    @Query('tenantId') tenantId?: string
+    @Query('tenantId') tenantId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string
   ) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
     let list = this.dataStore.rentCharges.filter((c) => c.workspaceId === effectiveWsId);
@@ -40,6 +42,12 @@ export class RentController {
     }
     if (tenantId) {
       list = list.filter((c) => c.tenantId === tenantId);
+    }
+    if (from) {
+      list = list.filter((c) => c.dueDate >= from);
+    }
+    if (to) {
+      list = list.filter((c) => c.dueDate <= to);
     }
 
     const today = new Date().toISOString().slice(0, 10);
@@ -170,13 +178,17 @@ export class RentController {
   listPayments(
     @Headers('x-workspace-id') wsId?: string,
     @Query('tenantId') tenantId?: string,
-    @Query('propertyId') propertyId?: string
+    @Query('propertyId') propertyId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string
   ) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
     let list = this.dataStore.payments.filter((p) => p.workspaceId === effectiveWsId);
 
     if (tenantId) list = list.filter((p) => p.tenantId === tenantId);
     if (propertyId) list = list.filter((p) => p.propertyId === propertyId);
+    if (from) list = list.filter((p) => p.paymentDate >= from);
+    if (to) list = list.filter((p) => p.paymentDate <= to);
 
     // Enrich with tenant & unit
     const enriched = list.map((p) => {

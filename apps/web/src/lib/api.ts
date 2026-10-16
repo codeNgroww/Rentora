@@ -61,8 +61,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Dashboard
-  getDashboard: (period = '2026-10') =>
-    request<DashboardSummary>(`/dashboard/summary?period=${period}`),
+  getDashboard: (period = '2026-10', from?: string, to?: string) => {
+    const query = new URLSearchParams({ period });
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    return request<DashboardSummary>(`/dashboard/summary?${query.toString()}`);
+  },
 
   // Properties
   getProperties: () => request<Property[]>('/properties'),
@@ -176,8 +180,26 @@ export const api = {
   getVendors: () => request<Vendor[]>('/vendors'),
 
   // Rent & Payments
-  getRentCharges: (status?: string) =>
-    request<RentCharge[]>(status ? `/rent-charges?status=${status}` : '/rent-charges'),
+  getRentCharges: (params?: {
+    status?: string;
+    from?: string;
+    to?: string;
+    propertyId?: string;
+    tenantId?: string;
+  } | string) => {
+    const query = new URLSearchParams();
+    if (typeof params === 'string') {
+      query.set('status', params);
+    } else if (params) {
+      if (params.status) query.set('status', params.status);
+      if (params.from) query.set('from', params.from);
+      if (params.to) query.set('to', params.to);
+      if (params.propertyId) query.set('propertyId', params.propertyId);
+      if (params.tenantId) query.set('tenantId', params.tenantId);
+    }
+    const q = query.toString();
+    return request<RentCharge[]>(q ? `/rent-charges?${q}` : '/rent-charges');
+  },
   createRentCharge: (data: Partial<RentCharge>) =>
     request<RentCharge>('/rent-charges', {
       method: 'POST',
@@ -192,7 +214,20 @@ export const api = {
     request<RentCharge>(`/rent-charges/${id}`, {
       method: 'DELETE',
     }),
-  getPayments: () => request<Payment[]>('/payments'),
+  getPayments: (params?: {
+    from?: string;
+    to?: string;
+    propertyId?: string;
+    tenantId?: string;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.from) query.set('from', params.from);
+    if (params?.to) query.set('to', params.to);
+    if (params?.propertyId) query.set('propertyId', params.propertyId);
+    if (params?.tenantId) query.set('tenantId', params.tenantId);
+    const q = query.toString();
+    return request<Payment[]>(q ? `/payments?${q}` : '/payments');
+  },
   updatePayment: (id: string, data: Partial<Payment>) =>
     request<Payment>(`/payments/${id}`, {
       method: 'PATCH',

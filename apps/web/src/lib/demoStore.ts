@@ -30,6 +30,7 @@ import {
   NotificationItem,
   AuditLogItem,
 } from '@rental-saas/contracts';
+import { isDateInRange } from './dateFilters';
 
 interface DemoStoreState {
   workspace: Workspace;
@@ -107,22 +108,45 @@ class DemoStore {
 
     // --- Dashboard ---
     if (path === '/dashboard/summary') {
-      const activeExpenses = this.state.expenses.filter((e) => e.status !== 'voided');
+      const from = params.get('from');
+      const to = params.get('to');
+      const period = params.get('period') || '2026-10';
+
+      const activeExpenses = this.state.expenses.filter((e) => {
+        if (e.status === 'voided') return false;
+        if (from && to) return isDateInRange(e.expenseDate, from, to);
+        return e.expenseDate.startsWith(period);
+      });
+
       const expensesPaid = activeExpenses
         .filter((e) => e.status === 'paid')
         .reduce((sum, e) => sum + parseFloat(e.amount), 0);
-      const rentCollected = this.state.payments.reduce(
+
+      const periodPayments = this.state.payments.filter((p) => {
+        if (from && to) return isDateInRange(p.paymentDate, from, to);
+        return p.paymentDate.startsWith(period);
+      });
+
+      const rentCollected = periodPayments.reduce(
         (sum, p) => sum + parseFloat(p.amount),
         0
       );
-      const arrearsTotal = this.state.rentCharges
+
+      const periodCharges = this.state.rentCharges.filter((c) => {
+        if (c.status === 'voided') return false;
+        if (from && to) return isDateInRange(c.dueDate, from, to);
+        return c.dueDate.startsWith(period);
+      });
+
+      const arrearsTotal = periodCharges
         .filter((c) => c.status === 'overdue' || c.status === 'partially_paid')
         .reduce((sum, c) => sum + parseFloat(c.outstandingAmount || c.amount), 0);
+
       const occupiedUnits = this.state.units.filter((u) => u.status === 'occupied').length;
 
       const summary: DashboardSummary = {
         workspaceId: this.state.workspace.id,
-        period: params.get('period') || '2026-10',
+        period,
         currency: 'AED',
         propertyCount: this.state.properties.length,
         totalUnits: this.state.units.length,
@@ -444,6 +468,11 @@ class DemoStore {
 
       // GET /expenses
       let list = [...this.state.expenses];
+      const from = params.get('from');
+      const to = params.get('to');
+      if (from || to) {
+        list = list.filter((e) => isDateInRange(e.expenseDate, from, to));
+      }
       if (params.get('includeVoided') !== 'true' && !params.get('status')) {
         list = list.filter((e) => e.status !== 'voided');
       }
@@ -534,7 +563,19 @@ class DemoStore {
         this.persist();
         return newCharge as unknown as T;
       }
-      return this.state.rentCharges.map((c) => {
+      let charges = [...this.state.rentCharges];
+      const status = params.get('status');
+      const from = params.get('from');
+      const to = params.get('to');
+      const propertyId = params.get('propertyId');
+      const tenantId = params.get('tenantId');
+
+      if (status) charges = charges.filter((c) => c.status === status);
+      if (propertyId) charges = charges.filter((c) => c.propertyId === propertyId);
+      if (tenantId) charges = charges.filter((c) => c.tenantId === tenantId);
+      if (from || to) charges = charges.filter((c) => isDateInRange(c.dueDate, from, to));
+
+      return charges.map((c) => {
         const t = this.state.tenants.find((tn) => tn.id === c.tenantId);
         const p = this.state.properties.find((pr) => pr.id === c.propertyId);
         const u = this.state.units.find((un) => un.id === c.unitId);
@@ -639,7 +680,17 @@ class DemoStore {
         this.persist();
         return newPayment as unknown as T;
       }
-      return this.state.payments.map((p) => {
+      let payments = [...this.state.payments];
+      const from = params.get('from');
+      const to = params.get('to');
+      const propertyId = params.get('propertyId');
+      const tenantId = params.get('tenantId');
+
+      if (propertyId) payments = payments.filter((p) => p.propertyId === propertyId);
+      if (tenantId) payments = payments.filter((p) => p.tenantId === tenantId);
+      if (from || to) payments = payments.filter((p) => isDateInRange(p.paymentDate, from, to));
+
+      return payments.map((p) => {
         const t = this.state.tenants.find((tn) => tn.id === p.tenantId);
         const pr = this.state.properties.find((prop) => prop.id === p.propertyId);
         const u = this.state.units.find((un) => un.id === p.unitId);
@@ -654,42 +705,56 @@ class DemoStore {
 
     // --- Reports ---
     if (path === '/reports/summary') {
+      const from = params.get('from');
+      const to = params.get('to');
+
+      const propertiesSummary = this.state.properties.map((p) => {
+        const propUnits = this.state.units.filter((u) => u.propertyId === p.id);
+        const occupied = propUnits.filter((u) => u.status === 'occupied').length;
+
+        // Income from payments for this property in range
+        const propPayments = this.state.payments.filter((pay) => {
+          if (pay.propertyId !== p.id) return false;
+          if (from || to) return isDateInRange(pay.paymentDate, from, to);
+          return pay.paymentDate.startsWith('2026-10');
+        });
+        const incomeNum = propPayments.reduce((sum, pay) => sum + parseFloat(pay.amount), 0);
+
+        // Operating expenses for this property in range
+        const propExpenses = this.state.expenses.filter((exp) => {
+          if (exp.propertyId !== p.id || exp.status === 'voided') return false;
+          if (from || to) return isDateInRange(exp.expenseDate, from, to);
+          return exp.expenseDate.startsWith('2026-10');
+        });
+        const expensesNum = propExpenses
+          .filter((exp) => exp.status === 'paid')
+          .reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
+
+        const netNum = incomeNum - expensesNum;
+
+        return {
+          propertyId: p.id,
+          propertyName: p.name,
+          income: incomeNum.toFixed(2),
+          expenses: expensesNum.toFixed(2),
+          net: netNum.toFixed(2),
+          occupiedUnits: occupied,
+          totalUnits: propUnits.length,
+        };
+      });
+
+      const totalIncomeNum = propertiesSummary.reduce((sum, p) => sum + parseFloat(p.income), 0);
+      const totalExpensesNum = propertiesSummary.reduce((sum, p) => sum + parseFloat(p.expenses), 0);
+      const netCashFlowNum = totalIncomeNum - totalExpensesNum;
+
       const rep: FinancialReportSummary = {
-        periodLabel: 'October 2026',
+        periodLabel: from && to ? `${from} to ${to}` : 'October 2026',
         currency: 'AED',
-        totalIncome: '21250.00',
-        totalExpenses: '9840.50',
-        netCashFlow: '11409.50',
+        totalIncome: totalIncomeNum.toFixed(2),
+        totalExpenses: totalExpensesNum.toFixed(2),
+        netCashFlow: netCashFlowNum.toFixed(2),
         rentArrearsTotal: '36250.00',
-        propertiesSummary: [
-          {
-            propertyId: 'p1',
-            propertyName: 'Marina Crown Tower',
-            income: '21250.00',
-            expenses: '4090.50',
-            net: '17159.50',
-            occupiedUnits: 27,
-            totalUnits: 31,
-          },
-          {
-            propertyId: 'p2',
-            propertyName: 'Downtown Luxury Heights',
-            income: '0.00',
-            expenses: '1100.00',
-            net: '-1100.00',
-            occupiedUnits: 1,
-            totalUnits: 2,
-          },
-          {
-            propertyId: 'p3',
-            propertyName: 'Corniche View Residences',
-            income: '0.00',
-            expenses: '4650.00',
-            net: '-4650.00',
-            occupiedUnits: 1,
-            totalUnits: 1,
-          },
-        ],
+        propertiesSummary,
       };
       return rep as unknown as T;
     }

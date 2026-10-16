@@ -3,14 +3,24 @@
 import React from 'react';
 import { Download, FileSpreadsheet, Building2, AlertTriangle } from 'lucide-react';
 import { FinancialReportSummary, RentArrearsItem } from '@rental-saas/contracts';
+import { TimeframeFilter } from '../../lib/dateFilters';
+import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface ReportsScreenProps {
   summary: FinancialReportSummary | null;
   arrears: RentArrearsItem[];
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
   onExportCsv: (type: string) => void;
 }
 
-export function ReportsScreen({ summary, arrears, onExportCsv }: ReportsScreenProps) {
+export function ReportsScreen({
+  summary,
+  arrears,
+  timeframeFilter,
+  onTimeframeChange,
+  onExportCsv,
+}: ReportsScreenProps) {
   return (
     <div>
       {/* Top Header */}
@@ -32,7 +42,10 @@ export function ReportsScreen({ summary, arrears, onExportCsv }: ReportsScreenPr
             Auditable cash flow, property profitability, and rent arrears reports.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {timeframeFilter && onTimeframeChange && (
+            <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+          )}
           <button
             id="export-financial-csv-btn"
             className="btn btn-secondary btn-sm"
@@ -47,7 +60,9 @@ export function ReportsScreen({ summary, arrears, onExportCsv }: ReportsScreenPr
       {/* Property Profitability Statement Table */}
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">Property-Level Financial Performance (2026)</h3>
+          <h3 className="card-title">
+            Property-Level Financial Performance ({summary?.periodLabel || timeframeFilter?.label || '2026'})
+          </h3>
         </div>
         <div className="card-body">
           {!summary ? (

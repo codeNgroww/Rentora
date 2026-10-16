@@ -3,10 +3,14 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Bell, Plus, Download } from 'lucide-react';
 import { NotificationItem } from '@rental-saas/contracts';
+import { TimeframeFilter } from '../lib/dateFilters';
+import { TimeframeFilterBar } from './TimeframeFilterBar';
 
 interface TopBarProps {
   title: string;
   period: string; // e.g. "2026-10"
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onOpenAddExpense: () => void;
@@ -17,6 +21,8 @@ interface TopBarProps {
 export function TopBar({
   title,
   period,
+  timeframeFilter,
+  onTimeframeChange,
   onPrevMonth,
   onNextMonth,
   onOpenAddExpense,
@@ -43,26 +49,30 @@ export function TopBar({
       <h2 className="page-header-title">{title}</h2>
 
       <div className="top-actions">
-        {/* Month Navigator */}
-        <div className="period-nav">
-          <button
-            id="period-prev-btn"
-            className="period-btn"
-            onClick={onPrevMonth}
-            title="Previous month"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="period-label">{formatPeriod(period)}</span>
-          <button
-            id="period-next-btn"
-            className="period-btn"
-            onClick={onNextMonth}
-            title="Next month"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+        {/* Dynamic Timeframe Filter Bar (Monthly, Quarterly, Yearly, Custom) */}
+        {timeframeFilter && onTimeframeChange ? (
+          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+        ) : (
+          <div className="period-nav">
+            <button
+              id="period-prev-btn"
+              className="period-btn"
+              onClick={onPrevMonth}
+              title="Previous month"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="period-label">{formatPeriod(period)}</span>
+            <button
+              id="period-next-btn"
+              className="period-btn"
+              onClick={onNextMonth}
+              title="Next month"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
 
         {/* Notifications */}
         <div style={{ position: 'relative' }}>

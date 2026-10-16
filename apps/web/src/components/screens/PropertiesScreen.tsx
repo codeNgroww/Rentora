@@ -4,11 +4,14 @@ import React, { useState } from 'react';
 import { Building2, Plus, MapPin, Home, Key, Layers, Grid, Eye, Edit2, Trash2 } from 'lucide-react';
 import { Property, Unit } from '@rental-saas/contracts';
 import { BuildingView } from '../BuildingView';
+import { TimeframeFilter } from '../../lib/dateFilters';
 
 interface PropertiesScreenProps {
   properties: Property[];
   units: Unit[];
   period: string;
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onOpenAddProperty: () => void;
@@ -24,6 +27,8 @@ export function PropertiesScreen({
   properties,
   units,
   period,
+  timeframeFilter,
+  onTimeframeChange,
   onPrevMonth,
   onNextMonth,
   onOpenAddProperty,
@@ -157,6 +162,8 @@ export function PropertiesScreen({
           property={activeProp}
           units={propUnits}
           period={period}
+          timeframeFilter={timeframeFilter}
+          onTimeframeChange={onTimeframeChange}
           onPrevMonth={onPrevMonth}
           onNextMonth={onNextMonth}
           onRecordPaymentForUnit={onRecordPaymentForUnit}

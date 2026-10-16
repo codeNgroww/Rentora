@@ -16,6 +16,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { Expense, ExpenseCategory, Property, Unit } from '@rental-saas/contracts';
+import { TimeframeFilter, isDateInRange } from '../../lib/dateFilters';
+import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface ExpensesScreenProps {
   expenses: Expense[];
@@ -23,6 +25,8 @@ interface ExpensesScreenProps {
   properties: Property[];
   units: Unit[];
   period: string;
+  timeframeFilter?: TimeframeFilter;
+  onTimeframeChange?: (tf: TimeframeFilter) => void;
   onOpenAddModal: () => void;
   onEditExpense?: (expense: Expense) => void;
   onDeleteExpense?: (id: string) => Promise<void>;
@@ -36,6 +40,8 @@ export function ExpensesScreen({
   properties,
   units,
   period,
+  timeframeFilter,
+  onTimeframeChange,
   onOpenAddModal,
   onEditExpense,
   onDeleteExpense,
@@ -55,6 +61,9 @@ export function ExpensesScreen({
 
   // Filter expenses
   const filtered = expenses.filter((e) => {
+    if (timeframeFilter && !isDateInRange(e.expenseDate, timeframeFilter.startDate, timeframeFilter.endDate)) {
+      return false;
+    }
     if (!showVoided && e.status === 'voided') return false;
     if (selectedCategory !== 'all' && e.categoryId !== selectedCategory) return false;
     if (selectedProperty !== 'all' && e.propertyId !== selectedProperty) return false;
@@ -122,20 +131,24 @@ export function ExpensesScreen({
           gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button
-            className={`btn btn-sm ${viewMode === 'monthly' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('monthly')}
-          >
-            Monthly
-          </button>
-          <button
-            className={`btn btn-sm ${viewMode === 'yearly' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setViewMode('yearly')}
-          >
-            Yearly
-          </button>
-        </div>
+        {timeframeFilter && onTimeframeChange ? (
+          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+        ) : (
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button
+              className={`btn btn-sm ${viewMode === 'monthly' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('monthly')}
+            >
+              Monthly
+            </button>
+            <button
+              className={`btn btn-sm ${viewMode === 'yearly' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setViewMode('yearly')}
+            >
+              Yearly
+            </button>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button id="export-expenses-btn" className="btn btn-secondary btn-sm" onClick={onExportCsv}>

@@ -14,7 +14,9 @@ export class DashboardController {
   getSummary(
     @Headers('x-workspace-id') wsId?: string,
     @Query('period') period?: string,
-    @Query('propertyId') propertyId?: string
+    @Query('propertyId') propertyId?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string
   ) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
     const targetPeriod = period || '2026-10'; // YYYY-MM or YYYY
@@ -36,27 +38,31 @@ export class DashboardController {
     const vacantUnits = units.length - occupiedUnits;
     const occupancyRate = units.length > 0 ? (occupiedUnits / units.length) * 100 : 0;
 
-    // Rent charges for period
-    const charges = this.dataStore.rentCharges.filter(
-      (c) =>
-        c.workspaceId === effectiveWsId &&
-        propertyIds.has(c.propertyId) &&
-        c.dueDate.startsWith(targetPeriod) &&
-        c.status !== 'voided'
-    );
+    // Rent charges for period or date range
+    const charges = this.dataStore.rentCharges.filter((c) => {
+      if (c.workspaceId !== effectiveWsId || !propertyIds.has(c.propertyId) || c.status === 'voided') {
+        return false;
+      }
+      if (from && to) {
+        return c.dueDate >= from && c.dueDate <= to;
+      }
+      return c.dueDate.startsWith(targetPeriod);
+    });
 
     const rentDueNum = charges.reduce((sum, c) => sum + parseFloat(c.amount), 0);
     const rentCollectedNum = charges.reduce((sum, c) => sum + parseFloat(c.paidAmount || '0'), 0);
     const rentOutstandingNum = Math.max(0, rentDueNum - rentCollectedNum);
 
-    // Expenses for period
-    const expenses = this.dataStore.expenses.filter(
-      (e) =>
-        e.workspaceId === effectiveWsId &&
-        propertyIds.has(e.propertyId) &&
-        e.expenseDate.startsWith(targetPeriod) &&
-        e.status !== 'voided'
-    );
+    // Expenses for period or date range
+    const expenses = this.dataStore.expenses.filter((e) => {
+      if (e.workspaceId !== effectiveWsId || !propertyIds.has(e.propertyId) || e.status === 'voided') {
+        return false;
+      }
+      if (from && to) {
+        return e.expenseDate >= from && e.expenseDate <= to;
+      }
+      return e.expenseDate.startsWith(targetPeriod);
+    });
 
     const paidExpensesNum = expenses
       .filter((e) => e.status === 'paid')
