@@ -38,7 +38,7 @@ import {
 } from '@rental-saas/contracts';
 
 export default function Home() {
-  const [currentTab, setCurrentTab] = useState<string>('expenses'); // Default to expenses to match reference app
+  const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [period, setPeriod] = useState<string>('2026-10');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
