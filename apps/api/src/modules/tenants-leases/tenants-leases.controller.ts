@@ -147,14 +147,17 @@ export class TenantsLeasesController {
     // Enrich with tenant & unit info
     const enriched = list.map((l) => {
       const tenant = this.dataStore.tenants.find((t) => t.id === l.tenantId);
-      const unit = this.dataStore.units.find((u) => u.id === l.unitId);
       const property = this.dataStore.properties.find((p) => p.id === l.propertyId);
+
+      const unitIds = l.unitIds && l.unitIds.length > 0 ? l.unitIds : [l.unitId];
+      const matchedUnits = this.dataStore.units.filter((u) => unitIds.includes(u.id));
+      const unitNumbers = matchedUnits.map((u) => u.unitNumber).join(', ');
 
       return {
         ...l,
         tenantName: tenant?.fullName || 'Unknown Tenant',
         tenantPhone: tenant?.phoneNumber || '',
-        unitNumber: unit?.unitNumber || '',
+        unitNumber: unitNumbers || (matchedUnits[0]?.unitNumber || ''),
         propertyName: property?.name || '',
       };
     });
@@ -171,6 +174,7 @@ export class TenantsLeasesController {
     @Body()
     body: {
       unitId: string;
+      unitIds?: string[];
       propertyId: string;
       tenantId: string;
       startDate: string;
@@ -180,30 +184,39 @@ export class TenantsLeasesController {
       numberOfCheques?: number;
       securityDeposit?: string;
       termsNotes?: string;
+      cheques?: any[];
     }
   ) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
 
+    const targetUnitIds =
+      body.unitIds && body.unitIds.length > 0 ? body.unitIds : [body.unitId];
+
     // Validate foreign keys
-    const unit = this.dataStore.units.find(
-      (u) => u.id === body.unitId && u.workspaceId === effectiveWsId
+    const units = this.dataStore.units.filter(
+      (u) => targetUnitIds.includes(u.id) && u.workspaceId === effectiveWsId
     );
-    if (!unit) throw new BadRequestException('Unit not found in workspace.');
+    if (units.length === 0) throw new BadRequestException('No valid units found in workspace.');
 
     const tenant = this.dataStore.tenants.find(
       (t) => t.id === body.tenantId && t.workspaceId === effectiveWsId
     );
     if (!tenant) throw new BadRequestException('Tenant not found in workspace.');
 
-    // Enforce overlapping lease policy: cannot have active lease on the same unit
-    const hasActiveLease = this.dataStore.leases.some(
-      (l) =>
-        l.unitId === body.unitId &&
-        (l.status === 'active' || l.status === 'expiring') &&
-        !(body.startDate > l.endDate || body.endDate < l.startDate)
-    );
-    if (hasActiveLease) {
-      throw new BadRequestException('This unit already has an active lease for overlapping dates.');
+    // Enforce overlapping lease policy: cannot have active lease on any of the target units
+    for (const uid of targetUnitIds) {
+      const hasActiveLease = this.dataStore.leases.some(
+        (l) =>
+          ((l.unitIds && l.unitIds.includes(uid)) || l.unitId === uid) &&
+          (l.status === 'active' || l.status === 'expiring') &&
+          !(body.startDate > l.endDate || body.endDate < l.startDate)
+      );
+      if (hasActiveLease) {
+        const u = units.find((x) => x.id === uid);
+        throw new BadRequestException(
+          `Unit ${u?.unitNumber || uid} already has an active lease for overlapping dates.`
+        );
+      }
     }
 
     const rentAmt = parseFloat(body.annualRent);
@@ -214,59 +227,90 @@ export class TenantsLeasesController {
     const newLease: Lease = {
       id: `l-${Date.now()}`,
       workspaceId: effectiveWsId,
-      unitId: body.unitId,
-      propertyId: body.propertyId || unit.propertyId,
+      unitId: targetUnitIds[0],
+      unitIds: targetUnitIds,
+      propertyId: body.propertyId || units[0].propertyId,
       tenantId: body.tenantId,
       startDate: body.startDate,
       endDate: body.endDate,
       annualRent: body.annualRent,
       paymentFrequency: body.paymentFrequency || 'quarterly',
-      numberOfCheques: body.numberOfCheques || 4,
+      numberOfCheques: body.numberOfCheques || (body.cheques ? body.cheques.length : 4),
       securityDeposit: body.securityDeposit || '0.00',
       status: 'active',
       termsNotes: body.termsNotes || '',
+      cheques: body.cheques || [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     this.dataStore.leases.push(newLease);
 
-    // Update unit status to occupied
-    unit.status = 'occupied';
-    unit.currentLeaseId = newLease.id;
+    // Update all target units status to occupied
+    units.forEach((u) => {
+      u.status = 'occupied';
+      u.currentLeaseId = newLease.id;
+      u.currentTenantName = tenant.fullName;
+    });
 
-    // Automatically generate quarterly rent charges (every 3 months) through bank cheques
-    const freq = newLease.paymentFrequency || 'quarterly';
-    const installments =
-      freq === 'monthly' ? 12 : freq === 'quarterly' ? 4 : freq === 'semi-annual' ? 2 : 1;
-    const installmentAmt = (rentAmt / installments).toFixed(2);
-    const monthsPerInstallment = Math.round(12 / installments);
+    // Generate Rent Charges: Use customized cheques if provided, or calculate installments
+    if (body.cheques && Array.isArray(body.cheques) && body.cheques.length > 0) {
+      body.cheques.forEach((chq: any, i: number) => {
+        const charge: RentCharge = {
+          id: `rc-${Date.now()}-${i + 1}`,
+          workspaceId: effectiveWsId,
+          leaseId: newLease.id,
+          propertyId: newLease.propertyId,
+          unitId: newLease.unitId,
+          tenantId: newLease.tenantId,
+          periodStart: chq.dueDate || newLease.startDate,
+          periodEnd: newLease.endDate,
+          dueDate: chq.dueDate || newLease.startDate,
+          amount: parseFloat(chq.amount || '0').toFixed(2),
+          paidAmount: '0.00',
+          outstandingAmount: parseFloat(chq.amount || '0').toFixed(2),
+          status: 'pending',
+          notes:
+            chq.notes ||
+            `Cheque ${i + 1} of ${body.cheques!.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        this.dataStore.rentCharges.push(charge);
+      });
+    } else {
+      const freq = newLease.paymentFrequency || 'quarterly';
+      const installments =
+        freq === 'monthly' ? 12 : freq === 'quarterly' ? 4 : freq === 'semi-annual' ? 2 : 1;
+      const installmentAmt = (rentAmt / installments).toFixed(2);
+      const monthsPerInstallment = Math.round(12 / installments);
 
-    const [startYear, startMonth, startDay] = newLease.startDate.split('-').map(Number);
+      const [startYear, startMonth, startDay] = newLease.startDate.split('-').map(Number);
 
-    for (let i = 0; i < installments; i++) {
-      const chargeDate = new Date(startYear, startMonth - 1 + i * monthsPerInstallment, startDay);
-      const dueDateStr = chargeDate.toISOString().slice(0, 10);
+      for (let i = 0; i < installments; i++) {
+        const chargeDate = new Date(startYear, startMonth - 1 + i * monthsPerInstallment, startDay);
+        const dueDateStr = chargeDate.toISOString().slice(0, 10);
 
-      const charge: RentCharge = {
-        id: `rc-${Date.now()}-${i + 1}`,
-        workspaceId: effectiveWsId,
-        leaseId: newLease.id,
-        propertyId: newLease.propertyId,
-        unitId: newLease.unitId,
-        tenantId: newLease.tenantId,
-        periodStart: dueDateStr,
-        periodEnd: newLease.endDate,
-        dueDate: dueDateStr,
-        amount: installmentAmt,
-        paidAmount: '0.00',
-        outstandingAmount: installmentAmt,
-        status: 'pending',
-        notes: `Cheque ${i + 1} of ${installments} (Quarterly PDC - Due every 3 months)`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      this.dataStore.rentCharges.push(charge);
+        const charge: RentCharge = {
+          id: `rc-${Date.now()}-${i + 1}`,
+          workspaceId: effectiveWsId,
+          leaseId: newLease.id,
+          propertyId: newLease.propertyId,
+          unitId: newLease.unitId,
+          tenantId: newLease.tenantId,
+          periodStart: dueDateStr,
+          periodEnd: newLease.endDate,
+          dueDate: dueDateStr,
+          amount: installmentAmt,
+          paidAmount: '0.00',
+          outstandingAmount: installmentAmt,
+          status: 'pending',
+          notes: `Cheque ${i + 1} of ${installments} (Quarterly PDC - Due every 3 months)`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        this.dataStore.rentCharges.push(charge);
+      }
     }
 
     this.dataStore.saveToFile();
@@ -312,12 +356,16 @@ export class TenantsLeasesController {
 
     const lease = this.dataStore.leases.splice(idx, 1)[0];
 
-    // Vacate unit if it was occupied by this lease
-    const unit = this.dataStore.units.find((u) => u.id === lease.unitId);
-    if (unit && unit.currentLeaseId === lease.id) {
-      unit.status = 'vacant';
-      unit.currentLeaseId = undefined;
-    }
+    // Vacate all units that were occupied by this lease
+    const targetUnitIds =
+      lease.unitIds && lease.unitIds.length > 0 ? lease.unitIds : [lease.unitId];
+    this.dataStore.units.forEach((u) => {
+      if (targetUnitIds.includes(u.id)) {
+        u.status = 'vacant';
+        u.currentLeaseId = undefined;
+        u.currentTenantName = undefined;
+      }
+    });
 
     // Also remove associated rent charges
     this.dataStore.rentCharges = this.dataStore.rentCharges.filter((c) => c.leaseId !== lease.id);

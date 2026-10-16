@@ -9,12 +9,12 @@
       "ownerId": "a1111111-1111-4111-8111-111111111111",
       "vatSettings": {
         "enabled": true,
-        "defaultRate": 7.5,
+        "defaultRate": 5,
         "trn": "100999888777003",
         "calculationMode": "exclusive"
       },
       "createdAt": "2026-01-01T00:00:00Z",
-      "updatedAt": "2026-10-15T13:01:16.681Z"
+      "updatedAt": "2026-10-16T13:24:45.041Z"
     }
   ],
   "members": [
@@ -66,21 +66,6 @@
       "updatedAt": "2026-10-14T00:00:00Z"
     },
     {
-      "id": "p2",
-      "workspaceId": "w1111111-1111-4111-8111-111111111111",
-      "name": "Downtown Luxury Heights",
-      "type": "residential",
-      "address": "Sheikh Mohammed bin Rashid Blvd, Downtown Dubai",
-      "emirate": "Dubai",
-      "communityArea": "Downtown Dubai",
-      "buildingReference": "BLDG-DLH-02",
-      "totalUnits": 2,
-      "notes": "Luxury residences next to Dubai Mall and Burj Khalifa",
-      "isArchived": false,
-      "createdAt": "2026-01-10T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
-    },
-    {
       "id": "p3",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
       "name": "Corniche View Residences",
@@ -125,12 +110,14 @@
       "bathrooms": 2,
       "squareFeet": 950,
       "marketRent": "10000.00",
-      "status": "vacant",
+      "status": "occupied",
       "paymentStatus": "vacant",
       "paidAmount": "0.00",
       "dueAmount": "0.00",
       "createdAt": "2026-01-05T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
+      "updatedAt": "2026-10-14T00:00:00Z",
+      "currentLeaseId": "l-1792159705370",
+      "currentTenantName": "Alexander Wright"
     },
     {
       "id": "u-503",
@@ -306,12 +293,14 @@
       "bathrooms": 2,
       "squareFeet": 950,
       "marketRent": "10000.00",
-      "status": "vacant",
+      "status": "occupied",
       "paymentStatus": "vacant",
       "paidAmount": "0.00",
       "dueAmount": "0.00",
       "createdAt": "2026-01-05T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
+      "updatedAt": "2026-10-14T00:00:00Z",
+      "currentLeaseId": "l-1792159705370",
+      "currentTenantName": "Alexander Wright"
     },
     {
       "id": "u-301",
@@ -657,38 +646,6 @@
       "updatedAt": "2026-10-14T00:00:00Z"
     },
     {
-      "id": "u201",
-      "workspaceId": "w1111111-1111-4111-8111-111111111111",
-      "propertyId": "p2",
-      "unitNumber": "2001",
-      "floor": "20th Floor",
-      "bedrooms": 2,
-      "bathrooms": 2,
-      "squareFeet": 1200,
-      "marketRent": "145000.00",
-      "status": "occupied",
-      "currentTenantName": "Elena Rostova",
-      "paymentStatus": "overdue",
-      "dueAmount": "36250.00",
-      "createdAt": "2026-01-10T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
-    },
-    {
-      "id": "u202",
-      "workspaceId": "w1111111-1111-4111-8111-111111111111",
-      "propertyId": "p2",
-      "unitNumber": "2002",
-      "floor": "20th Floor",
-      "bedrooms": 3,
-      "bathrooms": 4,
-      "squareFeet": 2100,
-      "marketRent": "220000.00",
-      "status": "vacant",
-      "paymentStatus": "vacant",
-      "createdAt": "2026-01-10T00:00:00Z",
-      "updatedAt": "2026-10-14T00:00:00Z"
-    },
-    {
       "id": "u301",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
       "propertyId": "p3",
@@ -821,6 +778,49 @@
       "termsNotes": "Abu Dhabi Tawtheeq registered contract",
       "createdAt": "2026-02-01T00:00:00Z",
       "updatedAt": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "l-1792159705370",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "unitId": "u-406",
+      "unitIds": [
+        "u-406",
+        "u-502"
+      ],
+      "propertyId": "p1",
+      "tenantId": "t1",
+      "startDate": "2026-11-01",
+      "endDate": "2027-10-31",
+      "annualRent": "20000.00",
+      "paymentFrequency": "quarterly",
+      "numberOfCheques": 4,
+      "securityDeposit": "1000.00",
+      "status": "active",
+      "termsNotes": null,
+      "cheques": [
+        {
+          "dueDate": "2026-10-31",
+          "amount": "5250.00",
+          "notes": "Cheque 1 (Month 1)"
+        },
+        {
+          "dueDate": "2027-01-31",
+          "amount": "5250.00",
+          "notes": "Cheque 2 (Month 4)"
+        },
+        {
+          "dueDate": "2027-04-30",
+          "amount": "5250.00",
+          "notes": "Cheque 3 (Month 7)"
+        },
+        {
+          "dueDate": "2027-07-31",
+          "amount": "5250.00",
+          "notes": "Cheque 4 (Month 10)"
+        }
+      ],
+      "createdAt": "2026-10-16T14:08:25.371Z",
+      "updatedAt": "2026-10-16T14:09:16.954Z"
     }
   ],
   "categories": [
@@ -1082,22 +1082,76 @@
       "updatedAt": "2026-09-02T00:00:00Z"
     },
     {
-      "id": "rc3",
+      "id": "rc-1792159705371-1",
       "workspaceId": "w1111111-1111-4111-8111-111111111111",
-      "leaseId": "l3",
-      "propertyId": "p2",
-      "unitId": "u201",
-      "tenantId": "t3",
-      "periodStart": "2026-08-01",
-      "periodEnd": "2026-10-31",
-      "dueDate": "2026-08-01",
-      "amount": "36250.00",
-      "paidAmount": "36250.00",
-      "outstandingAmount": "0.00",
-      "status": "paid",
-      "notes": "Cheque 4 of 4 (Quarterly rent PDC - 3 months overdue)",
-      "createdAt": "2026-09-25T00:00:00Z",
-      "updatedAt": "2026-10-15T13:01:16.674Z"
+      "leaseId": "l-1792159705370",
+      "propertyId": "p1",
+      "unitId": "u-406",
+      "tenantId": "t1",
+      "periodStart": "2026-10-31",
+      "periodEnd": "2027-10-31",
+      "dueDate": "2026-10-31",
+      "amount": "5250.00",
+      "paidAmount": "0.00",
+      "outstandingAmount": "5250.00",
+      "status": "pending",
+      "notes": "Cheque 1 (Month 1)",
+      "createdAt": "2026-10-16T14:08:25.371Z",
+      "updatedAt": "2026-10-16T14:08:25.371Z"
+    },
+    {
+      "id": "rc-1792159705371-2",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "leaseId": "l-1792159705370",
+      "propertyId": "p1",
+      "unitId": "u-406",
+      "tenantId": "t1",
+      "periodStart": "2027-01-31",
+      "periodEnd": "2027-10-31",
+      "dueDate": "2027-01-31",
+      "amount": "5250.00",
+      "paidAmount": "0.00",
+      "outstandingAmount": "5250.00",
+      "status": "pending",
+      "notes": "Cheque 2 (Month 4)",
+      "createdAt": "2026-10-16T14:08:25.371Z",
+      "updatedAt": "2026-10-16T14:08:25.371Z"
+    },
+    {
+      "id": "rc-1792159705371-3",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "leaseId": "l-1792159705370",
+      "propertyId": "p1",
+      "unitId": "u-406",
+      "tenantId": "t1",
+      "periodStart": "2027-04-30",
+      "periodEnd": "2027-10-31",
+      "dueDate": "2027-04-30",
+      "amount": "5250.00",
+      "paidAmount": "0.00",
+      "outstandingAmount": "5250.00",
+      "status": "pending",
+      "notes": "Cheque 3 (Month 7)",
+      "createdAt": "2026-10-16T14:08:25.371Z",
+      "updatedAt": "2026-10-16T14:08:25.371Z"
+    },
+    {
+      "id": "rc-1792159705371-4",
+      "workspaceId": "w1111111-1111-4111-8111-111111111111",
+      "leaseId": "l-1792159705370",
+      "propertyId": "p1",
+      "unitId": "u-406",
+      "tenantId": "t1",
+      "periodStart": "2027-07-31",
+      "periodEnd": "2027-10-31",
+      "dueDate": "2027-07-31",
+      "amount": "5250.00",
+      "paidAmount": "0.00",
+      "outstandingAmount": "5250.00",
+      "status": "pending",
+      "notes": "Cheque 4 (Month 10)",
+      "createdAt": "2026-10-16T14:08:25.371Z",
+      "updatedAt": "2026-10-16T14:08:25.371Z"
     }
   ],
   "payments": [
@@ -1376,5 +1430,5 @@
       }
     }
   ],
-  "updatedAt": "2026-10-16T11:46:18.113Z"
+  "updatedAt": "2026-10-16T14:09:16.955Z"
 }

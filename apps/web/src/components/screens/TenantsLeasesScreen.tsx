@@ -131,7 +131,12 @@ export function TenantsLeasesScreen({
                     {leases.map((l) => {
                       const tenant = tenants.find((t) => t.id === l.tenantId);
                       const prop = properties.find((p) => p.id === l.propertyId);
-                      const unit = units.find((u) => u.id === l.unitId);
+                      const unitIds = l.unitIds && l.unitIds.length > 0 ? l.unitIds : [l.unitId];
+                      const matchedUnits = units.filter((u) => unitIds.includes(u.id));
+                      const unitLabel =
+                        matchedUnits.length > 1
+                          ? `Units ${matchedUnits.map((u) => u.unitNumber).join(', ')} (${matchedUnits.length} Units)`
+                          : `Unit ${matchedUnits[0]?.unitNumber || l.unitId}`;
 
                       const statusClass =
                         l.status === 'active'
@@ -152,8 +157,8 @@ export function TenantsLeasesScreen({
                           </td>
                           <td>
                             <div style={{ fontWeight: 600 }}>{prop?.name}</div>
-                            <div style={{ fontSize: '11px', color: '#64748b' }}>
-                              Unit {unit?.unitNumber}
+                            <div style={{ fontSize: '11px', color: '#0369a1', fontWeight: 600 }}>
+                              {unitLabel}
                             </div>
                           </td>
                           <td style={{ whiteSpace: 'nowrap' }}>
@@ -256,7 +261,7 @@ export function TenantsLeasesScreen({
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Full Name</th>
+                      <th>Tenant & Rented Units</th>
                       <th>Contact Info</th>
                       <th>Emirates ID</th>
                       <th>Preferred Channel</th>
@@ -265,9 +270,38 @@ export function TenantsLeasesScreen({
                     </tr>
                   </thead>
                   <tbody>
-                    {tenants.map((t) => (
-                      <tr key={t.id}>
-                        <td style={{ fontWeight: 700, color: '#0f172a' }}>{t.fullName}</td>
+                    {tenants.map((t) => {
+                      const tenantLeases = leases.filter((l) => l.tenantId === t.id && l.status === 'active');
+                      const leasedUnitIds = Array.from(
+                        new Set(
+                          tenantLeases.flatMap((l) =>
+                            l.unitIds && l.unitIds.length > 0 ? l.unitIds : [l.unitId]
+                          )
+                        )
+                      );
+                      const tenantUnits = units.filter((u) => leasedUnitIds.includes(u.id));
+
+                      return (
+                        <tr key={t.id}>
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{t.fullName}</div>
+                            {tenantUnits.length > 0 ? (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                                {tenantUnits.map((tu) => (
+                                  <span
+                                    key={tu.id}
+                                    className="badge badge-blue"
+                                    style={{ fontSize: '10.5px', padding: '1px 6px' }}
+                                    title={`Unit ${tu.unitNumber} (${tu.type === 'commercial' || tu.isShop ? 'Commercial' : `${tu.bedrooms} Bed`})`}
+                                  >
+                                    Unit {tu.unitNumber} {tu.type === 'commercial' || tu.isShop ? '• Commercial' : ''}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: '11px', color: '#94a3b8' }}>No active units</span>
+                            )}
+                          </td>
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <Phone size={12} color="#64748b" />
@@ -318,7 +352,8 @@ export function TenantsLeasesScreen({
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>

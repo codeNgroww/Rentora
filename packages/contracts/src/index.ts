@@ -79,11 +79,14 @@ export interface Property {
   updatedAt: string;
 }
 
+export type UnitType = 'residential' | 'commercial';
+
 export interface Unit {
   id: string;
   workspaceId: string;
   propertyId: string;
   unitNumber: string;
+  type?: UnitType;
   floor?: string;
   bedrooms: number;
   bathrooms: number;
@@ -115,10 +118,19 @@ export interface Tenant {
   createdAt: string;
 }
 
+export interface ChequeScheduleItem {
+  chequeNumber?: string;
+  dueDate: string;
+  amount: string;
+  bankName?: string;
+  notes?: string;
+}
+
 export interface Lease {
   id: string;
   workspaceId: string;
   unitId: string;
+  unitIds?: string[];
   propertyId: string;
   tenantId: string;
   startDate: string; // YYYY-MM-DD
@@ -130,6 +142,7 @@ export interface Lease {
   status: LeaseStatus;
   termsNotes?: string;
   contractUrl?: string;
+  cheques?: ChequeScheduleItem[];
   createdAt: string;
   updatedAt: string;
 }

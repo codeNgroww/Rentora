@@ -847,6 +847,14 @@ export function BuildingView({
                   <div style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>{selectedUnit.floor}</div>
                 </div>
                 <div>
+                  <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Unit Type</div>
+                  <div style={{ fontWeight: 700, fontSize: '13px', color: '#0369a1' }}>
+                    {selectedUnit.type === 'commercial' || selectedUnit.isShop
+                      ? 'Commercial'
+                      : `${selectedUnit.bedrooms || 1} Bed • ${selectedUnit.bathrooms || 1} Bath`}
+                  </div>
+                </div>
+                <div>
                   <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Status</div>
                   <span
                     className={`badge ${

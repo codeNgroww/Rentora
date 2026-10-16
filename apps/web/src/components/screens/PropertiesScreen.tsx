@@ -328,7 +328,13 @@ export function PropertiesScreen({
                           </td>
                           <td>{u.floor || 'Ground'}</td>
                           <td>
-                            {u.bedrooms} Bed • {u.bathrooms} Bath
+                            {u.type === 'commercial' || u.isShop ? (
+                              <span className="badge badge-blue" style={{ fontSize: '11px' }}>
+                                Commercial
+                              </span>
+                            ) : (
+                              `${u.bedrooms} Bed • ${u.bathrooms} Bath`
+                            )}
                           </td>
                           <td style={{ fontWeight: 600 }}>{u.currentTenantName || '—'}</td>
                           <td style={{ fontWeight: 600 }}>

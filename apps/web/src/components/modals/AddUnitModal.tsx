@@ -18,6 +18,9 @@ export function AddUnitModal({
   onClose,
   onSubmit,
 }: AddUnitModalProps) {
+  const [unitType, setUnitType] = useState<'residential' | 'commercial'>(
+    unit?.type || (unit?.isShop ? 'commercial' : 'residential')
+  );
   const [unitNumber, setUnitNumber] = useState(unit?.unitNumber || '');
   const [floor, setFloor] = useState(unit?.floor || '');
   const [bedrooms, setBedrooms] = useState(unit?.bedrooms ?? 1);
@@ -40,9 +43,11 @@ export function AddUnitModal({
     try {
       await onSubmit(propertyId, {
         unitNumber,
+        type: unitType,
+        isShop: unitType === 'commercial',
         floor: floor || null,
-        bedrooms: Number(bedrooms),
-        bathrooms: Number(bathrooms),
+        bedrooms: unitType === 'commercial' ? 0 : Number(bedrooms),
+        bathrooms: unitType === 'commercial' ? 0 : Number(bathrooms),
         squareFeet: squareFeet ? parseFloat(squareFeet) : null,
         marketRent: rentNum.toFixed(2),
         status,
@@ -85,13 +90,71 @@ export function AddUnitModal({
               </div>
             )}
 
+            {/* Unit Type Selection */}
+            <div className="form-group">
+              <label className="form-label">Unit Type *</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: unitType === 'residential' ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                    background: unitType === 'residential' ? '#f0f9ff' : '#ffffff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '12.5px',
+                    color: unitType === 'residential' ? '#0369a1' : '#475569',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="unitType"
+                    value="residential"
+                    checked={unitType === 'residential'}
+                    onChange={() => setUnitType('residential')}
+                    style={{ accentColor: '#0284c7' }}
+                  />
+                  <span>Residential</span>
+                </label>
+
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: unitType === 'commercial' ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                    background: unitType === 'commercial' ? '#f0f9ff' : '#ffffff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '12.5px',
+                    color: unitType === 'commercial' ? '#0369a1' : '#475569',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="unitType"
+                    value="commercial"
+                    checked={unitType === 'commercial'}
+                    onChange={() => setUnitType('commercial')}
+                    style={{ accentColor: '#0284c7' }}
+                  />
+                  <span>Commercial</span>
+                </label>
+              </div>
+            </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Unit Number *</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. 101, 2004, Villa 12"
+                  placeholder={unitType === 'commercial' ? 'e.g. Shop 1, Office 204' : 'e.g. 101, 2004, Villa 12'}
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
                   required
@@ -103,36 +166,39 @@ export function AddUnitModal({
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="e.g. 1st Floor, Penthouse"
+                  placeholder="e.g. Ground Floor, 1st Floor"
                   value={floor}
                   onChange={(e) => setFloor(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Bedrooms</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="form-control"
-                  value={bedrooms}
-                  onChange={(e) => setBedrooms(parseInt(e.target.value, 10))}
-                />
-              </div>
+            {/* If Commercial, bedroom and bathroom are NOT asked */}
+            {unitType === 'residential' && (
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Bedrooms</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="form-control"
+                    value={bedrooms}
+                    onChange={(e) => setBedrooms(parseInt(e.target.value, 10))}
+                  />
+                </div>
 
-              <div className="form-group">
-                <label className="form-label">Bathrooms</label>
-                <input
-                  type="number"
-                  min="1"
-                  className="form-control"
-                  value={bathrooms}
-                  onChange={(e) => setBathrooms(parseInt(e.target.value, 10))}
-                />
+                <div className="form-group">
+                  <label className="form-label">Bathrooms</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="form-control"
+                    value={bathrooms}
+                    onChange={(e) => setBathrooms(parseInt(e.target.value, 10))}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="form-row">
               <div className="form-group">

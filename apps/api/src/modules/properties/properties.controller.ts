@@ -185,6 +185,8 @@ export class PropertiesController {
     @Body()
     body: {
       unitNumber: string;
+      type?: 'residential' | 'commercial';
+      isShop?: boolean;
       floor?: string;
       bedrooms?: number;
       bathrooms?: number;
@@ -211,14 +213,17 @@ export class PropertiesController {
       throw new BadRequestException(`Unit ${body.unitNumber} already exists in this property`);
     }
 
+    const isCommercial = body.type === 'commercial' || body.isShop === true;
     const newUnit: Unit = {
       id: `u-${Date.now()}`,
       workspaceId: effectiveWsId,
       propertyId: propId,
       unitNumber: body.unitNumber,
+      type: body.type || (body.isShop ? 'commercial' : 'residential'),
+      isShop: isCommercial,
       floor: body.floor || '',
-      bedrooms: body.bedrooms || 1,
-      bathrooms: body.bathrooms || 1,
+      bedrooms: isCommercial ? 0 : (body.bedrooms ?? 1),
+      bathrooms: isCommercial ? 0 : (body.bathrooms ?? 1),
       squareFeet: body.squareFeet,
       marketRent: body.marketRent || '0.00',
       status: body.status || 'vacant',

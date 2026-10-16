@@ -32,21 +32,42 @@ export function TenancyContractModal({
   const chequeVat = (chequeBase * vatRate) / 100;
   const chequeTotal = chequeBase + chequeVat;
 
-  // Generate 4 quarterly cheque dates (every 3 months)
+  // Generate or use saved cheques schedule
   const [startYear, startMonth, startDay] = (lease.startDate || '2026-01-01').split('-').map(Number);
-  const chequeSchedule = Array.from({ length: numCheques }).map((_, i) => {
-    const monthsPerCheque = Math.round(12 / numCheques);
-    const date = new Date(startYear, startMonth - 1 + i * monthsPerCheque, startDay);
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return {
-      chequeNumber: `CHQ-${y}-${String(1001 + i)}`,
-      dueDate: `${y}-${m}-${d}`,
-      installmentIndex: i + 1,
-      monthPeriod: `Month ${i * monthsPerCheque + 1} to ${i * monthsPerCheque + monthsPerCheque}`,
-    };
-  });
+  const chequeSchedule =
+    lease.cheques && lease.cheques.length > 0
+      ? lease.cheques.map((c, i) => {
+          const totalAmt = parseFloat(c.amount) || 0;
+          const baseAmt = totalAmt / (1 + vatRate / 100);
+          const vatAmt = totalAmt - baseAmt;
+          return {
+            chequeNumber: c.chequeNumber || `CHQ-${String(1001 + i)}`,
+            bankName: c.bankName,
+            dueDate: c.dueDate,
+            installmentIndex: i + 1,
+            monthPeriod: `Installment #${i + 1}`,
+            base: baseAmt,
+            vat: vatAmt,
+            total: totalAmt,
+          };
+        })
+      : Array.from({ length: numCheques }).map((_, i) => {
+          const monthsPerCheque = Math.round(12 / numCheques);
+          const date = new Date(startYear, startMonth - 1 + i * monthsPerCheque, startDay);
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          return {
+            chequeNumber: `CHQ-${y}-${String(1001 + i)}`,
+            bankName: undefined,
+            dueDate: `${y}-${m}-${d}`,
+            installmentIndex: i + 1,
+            monthPeriod: `Month ${i * monthsPerCheque + 1} to ${i * monthsPerCheque + monthsPerCheque}`,
+            base: chequeBase,
+            vat: chequeVat,
+            total: chequeTotal,
+          };
+        });
 
   const handlePrint = () => {
     window.print();
@@ -416,16 +437,16 @@ export function TenancyContractModal({
                         {c.dueDate}
                       </td>
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontFamily: 'monospace' }}>
-                        {c.chequeNumber}
+                        {c.bankName ? `${c.bankName} - ` : ''}{c.chequeNumber}
                       </td>
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1' }}>
-                        AED {chequeBase.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        AED {c.base.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', color: '#4f46e5' }}>
-                        AED {chequeVat.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        AED {c.vat.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                       <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', fontWeight: 700, color: '#4f46e5' }}>
-                        AED {chequeTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        AED {c.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </td>
                     </tr>
                   ))}

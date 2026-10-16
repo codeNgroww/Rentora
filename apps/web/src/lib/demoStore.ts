@@ -222,14 +222,17 @@ class DemoStore {
 
     if (path.includes('/properties/') && path.endsWith('/units') && method === 'POST') {
       const propId = path.split('/')[2];
+      const isCommercial = body.type === 'commercial' || body.isShop === true;
       const newUnit: Unit = {
         id: `u-${Date.now()}`,
         workspaceId: this.state.workspace.id,
         propertyId: propId,
         unitNumber: body.unitNumber || '101',
+        type: body.type || (body.isShop ? 'commercial' : 'residential'),
+        isShop: isCommercial,
         floor: body.floor || '1st Floor',
-        bedrooms: body.bedrooms || 1,
-        bathrooms: body.bathrooms || 1,
+        bedrooms: isCommercial ? 0 : (body.bedrooms ?? 1),
+        bathrooms: isCommercial ? 0 : (body.bathrooms ?? 1),
         squareFeet: body.squareFeet || 800,
         marketRent: body.marketRent || '5000.00',
         status: 'vacant',
@@ -301,11 +304,15 @@ class DemoStore {
         const idx = this.state.leases.findIndex((l) => l.id === id);
         if (idx !== -1) {
           const deleted = this.state.leases.splice(idx, 1)[0];
-          const u = this.state.units.find((unit) => unit.id === deleted.unitId);
-          if (u) {
-            u.status = 'vacant';
-            u.currentTenantName = undefined;
-          }
+          const targetUnitIds =
+            deleted.unitIds && deleted.unitIds.length > 0 ? deleted.unitIds : [deleted.unitId];
+          this.state.units.forEach((unit) => {
+            if (targetUnitIds.includes(unit.id)) {
+              unit.status = 'vacant';
+              unit.currentLeaseId = undefined;
+              unit.currentTenantName = undefined;
+            }
+          });
           this.state.rentCharges = this.state.rentCharges.filter((c) => c.leaseId !== deleted.id);
           this.persist();
           return deleted as unknown as T;
@@ -316,30 +323,63 @@ class DemoStore {
 
     if (path === '/leases') {
       if (method === 'POST') {
+        const targetUnitIds =
+          body.unitIds && body.unitIds.length > 0 ? body.unitIds : [body.unitId];
         const newLease: Lease = {
           id: `l-${Date.now()}`,
           workspaceId: this.state.workspace.id,
-          unitId: body.unitId,
+          unitId: targetUnitIds[0],
+          unitIds: targetUnitIds,
           propertyId: body.propertyId,
           tenantId: body.tenantId,
           startDate: body.startDate || '2026-10-01',
           endDate: body.endDate || '2027-09-30',
           annualRent: body.annualRent || '60000.00',
           paymentFrequency: body.paymentFrequency || 'quarterly',
-          numberOfCheques: body.numberOfCheques || 4,
+          numberOfCheques: body.numberOfCheques || (body.cheques ? body.cheques.length : 4),
           securityDeposit: body.securityDeposit || '3000.00',
           status: 'active',
           termsNotes: body.termsNotes || '',
+          cheques: body.cheques || [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
         this.state.leases.push(newLease);
-        // Mark unit as occupied
-        const u = this.state.units.find((unit) => unit.id === body.unitId);
-        if (u) {
-          u.status = 'occupied';
-          const t = this.state.tenants.find((tenant) => tenant.id === body.tenantId);
-          u.currentTenantName = t?.fullName || 'Tenant';
+        // Mark all target units as occupied
+        const tenant = this.state.tenants.find((t) => t.id === body.tenantId);
+        this.state.units.forEach((u) => {
+          if (targetUnitIds.includes(u.id)) {
+            u.status = 'occupied';
+            u.currentLeaseId = newLease.id;
+            u.currentTenantName = tenant?.fullName || 'Tenant';
+          }
+        });
+
+        // Generate Rent Charges from custom cheques if provided
+        if (body.cheques && Array.isArray(body.cheques) && body.cheques.length > 0) {
+          body.cheques.forEach((chq: any, i: number) => {
+            const charge: RentCharge = {
+              id: `rc-${Date.now()}-${i + 1}`,
+              workspaceId: this.state.workspace.id,
+              leaseId: newLease.id,
+              propertyId: newLease.propertyId,
+              unitId: newLease.unitId,
+              tenantId: newLease.tenantId,
+              periodStart: chq.dueDate || newLease.startDate,
+              periodEnd: newLease.endDate,
+              dueDate: chq.dueDate || newLease.startDate,
+              amount: parseFloat(chq.amount || '0').toFixed(2),
+              paidAmount: '0.00',
+              outstandingAmount: parseFloat(chq.amount || '0').toFixed(2),
+              status: 'pending',
+              notes:
+                chq.notes ||
+                `Cheque ${i + 1} of ${body.cheques!.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            this.state.rentCharges.push(charge);
+          });
         }
         this.persist();
         return newLease as unknown as T;
