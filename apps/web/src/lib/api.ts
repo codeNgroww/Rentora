@@ -71,6 +71,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateProperty: (id: string, data: Partial<Property>) =>
+    request<Property>(`/properties/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteProperty: (id: string) =>
+    request<Property>(`/properties/${id}`, {
+      method: 'DELETE',
+    }),
   getProperty: (id: string) => request<Property & { units: Unit[] }>(`/properties/${id}`),
 
   // Units
@@ -81,6 +90,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateUnit: (id: string, data: Partial<Unit>) =>
+    request<Unit>(`/units/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteUnit: (id: string) =>
+    request<Unit>(`/units/${id}`, {
+      method: 'DELETE',
+    }),
 
   // Tenants & Leases
   getTenants: () => request<Tenant[]>('/tenants'),
@@ -89,11 +107,29 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateTenant: (id: string, data: Partial<Tenant>) =>
+    request<Tenant>(`/tenants/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteTenant: (id: string) =>
+    request<Tenant>(`/tenants/${id}`, {
+      method: 'DELETE',
+    }),
   getLeases: () => request<Lease[]>('/leases'),
   createLease: (data: Partial<Lease>) =>
     request<Lease>('/leases', {
       method: 'POST',
       body: JSON.stringify(data),
+    }),
+  updateLease: (id: string, data: Partial<Lease>) =>
+    request<Lease>(`/leases/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteLease: (id: string) =>
+    request<Lease>(`/leases/${id}`, {
+      method: 'DELETE',
     }),
 
   // Expenses (Reference Core)
@@ -122,6 +158,15 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateExpense: (id: string, data: Partial<Expense>) =>
+    request<Expense>(`/expenses/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteExpense: (id: string) =>
+    request<Expense>(`/expenses/${id}`, {
+      method: 'DELETE',
+    }),
   voidExpense: (id: string, reason: string) =>
     request<Expense>(`/expenses/${id}/void`, {
       method: 'POST',
@@ -138,7 +183,25 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+  updateRentCharge: (id: string, data: Partial<RentCharge>) =>
+    request<RentCharge>(`/rent-charges/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteRentCharge: (id: string) =>
+    request<RentCharge>(`/rent-charges/${id}`, {
+      method: 'DELETE',
+    }),
   getPayments: () => request<Payment[]>('/payments'),
+  updatePayment: (id: string, data: Partial<Payment>) =>
+    request<Payment>(`/payments/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deletePayment: (id: string) =>
+    request<Payment>(`/payments/${id}`, {
+      method: 'DELETE',
+    }),
   recordPayment: (data: {
     tenantId: string;
     propertyId: string;

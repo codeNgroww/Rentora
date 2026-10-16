@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Property, Unit, Tenant, PaymentFrequency } from '@rental-saas/contracts';
+import { Property, Unit, Tenant, PaymentFrequency, Lease } from '@rental-saas/contracts';
 
 interface AddLeaseModalProps {
+  lease?: Lease | null;
   properties: Property[];
   units: Unit[];
   tenants: Tenant[];
@@ -12,26 +13,30 @@ interface AddLeaseModalProps {
 }
 
 export function AddLeaseModal({
+  lease,
   properties,
   units,
   tenants,
   onClose,
   onSubmit,
 }: AddLeaseModalProps) {
-  const [propertyId, setPropertyId] = useState(properties[0]?.id || '');
+  const [propertyId, setPropertyId] = useState(lease?.propertyId || properties[0]?.id || '');
   const availableUnits = units.filter(
-    (u) => u.propertyId === propertyId && u.status === 'vacant'
+    (u) => u.propertyId === propertyId && (u.status === 'vacant' || u.id === lease?.unitId)
   );
 
-  const [unitId, setUnitId] = useState(availableUnits[0]?.id || '');
-  const [tenantId, setTenantId] = useState(tenants[0]?.id || '');
-  const [startDate, setStartDate] = useState('2026-11-01');
-  const [endDate, setEndDate] = useState('2027-10-31');
-  const [annualRent, setAnnualRent] = useState('85000.00');
-  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>('quarterly');
-  const [numberOfCheques, setNumberOfCheques] = useState(4);
-  const [securityDeposit, setSecurityDeposit] = useState('4250.00');
-  const [termsNotes, setTermsNotes] = useState('');
+  const [unitId, setUnitId] = useState(lease?.unitId || availableUnits[0]?.id || '');
+  const [tenantId, setTenantId] = useState(lease?.tenantId || tenants[0]?.id || '');
+  const [startDate, setStartDate] = useState(lease?.startDate || '2026-11-01');
+  const [endDate, setEndDate] = useState(lease?.endDate || '2027-10-31');
+  const [annualRent, setAnnualRent] = useState(lease?.annualRent || '85000.00');
+  const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>(
+    lease?.paymentFrequency || 'quarterly'
+  );
+  const [numberOfCheques, setNumberOfCheques] = useState(lease?.numberOfCheques || 4);
+  const [securityDeposit, setSecurityDeposit] = useState(lease?.securityDeposit || '4250.00');
+  const [termsNotes, setTermsNotes] = useState(lease?.termsNotes || '');
+  const [status, setStatus] = useState(lease?.status || 'active');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -87,7 +92,7 @@ export function AddLeaseModal({
       });
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to create lease contract');
+      setErrorMsg(err.message || (lease ? 'Failed to update lease contract' : 'Failed to create lease contract'));
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +102,7 @@ export function AddLeaseModal({
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3 className="modal-title">Create Lease Agreement</h3>
+          <h3 className="modal-title">{lease ? 'Edit Lease Agreement' : 'Create Lease Agreement'}</h3>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -342,7 +347,7 @@ export function AddLeaseModal({
               className="btn btn-primary"
               disabled={isSubmitting || !unitId}
             >
-              {isSubmitting ? 'Generating Lease...' : 'Save & Generate Charges'}
+              {isSubmitting ? (lease ? 'Updating Lease...' : 'Generating Lease...') : lease ? 'Save Lease Changes' : 'Save & Generate Charges'}
             </button>
           </div>
         </form>

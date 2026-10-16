@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ExpenseCategory, Property, Unit, Vendor } from '@rental-saas/contracts';
+import { ExpenseCategory, Property, Unit, Vendor, Expense } from '@rental-saas/contracts';
 
 interface AddExpenseModalProps {
+  expense?: Expense | null;
   categories: ExpenseCategory[];
   properties: Property[];
   units: Unit[];
@@ -13,6 +14,7 @@ interface AddExpenseModalProps {
 }
 
 export function AddExpenseModal({
+  expense,
   categories,
   properties,
   units,
@@ -20,17 +22,19 @@ export function AddExpenseModal({
   onClose,
   onSubmit,
 }: AddExpenseModalProps) {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
-  const [propertyId, setPropertyId] = useState(properties[0]?.id || '');
-  const [unitId, setUnitId] = useState('');
-  const [vendorId, setVendorId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
-  const [status, setStatus] = useState('paid');
-  const [reference, setReference] = useState('');
-  const [notes, setNotes] = useState('');
+  const [description, setDescription] = useState(expense?.description || '');
+  const [amount, setAmount] = useState(expense?.amount || '');
+  const [expenseDate, setExpenseDate] = useState(
+    expense?.expenseDate || new Date().toISOString().slice(0, 10)
+  );
+  const [categoryId, setCategoryId] = useState(expense?.categoryId || categories[0]?.id || '');
+  const [propertyId, setPropertyId] = useState(expense?.propertyId || properties[0]?.id || '');
+  const [unitId, setUnitId] = useState(expense?.unitId || '');
+  const [vendorId, setVendorId] = useState(expense?.vendorId || '');
+  const [paymentMethod, setPaymentMethod] = useState(expense?.paymentMethod || 'bank_transfer');
+  const [status, setStatus] = useState(expense?.status || 'paid');
+  const [reference, setReference] = useState(expense?.reference || '');
+  const [notes, setNotes] = useState(expense?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -80,7 +84,7 @@ export function AddExpenseModal({
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3 className="modal-title">Record New Expense</h3>
+          <h3 className="modal-title">{expense ? 'Edit Expense' : 'Record New Expense'}</h3>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -227,7 +231,7 @@ export function AddExpenseModal({
                   id="expense-method-input"
                   className="form-control"
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={(e) => setPaymentMethod(e.target.value as any)}
                 >
                   <option value="bank_transfer">Bank Transfer</option>
                   <option value="cash">Cash</option>
@@ -242,7 +246,7 @@ export function AddExpenseModal({
                   id="expense-status-input"
                   className="form-control"
                   value={status}
-                  onChange={(e) => setStatus(e.target.value)}
+                  onChange={(e) => setStatus(e.target.value as any)}
                 >
                   <option value="paid">Paid</option>
                   <option value="pending">Pending</option>
@@ -285,7 +289,7 @@ export function AddExpenseModal({
               className="btn btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Save Expense'}
+              {isSubmitting ? (expense ? 'Updating...' : 'Saving...') : expense ? 'Update Expense' : 'Save Expense'}
             </button>
           </div>
         </form>

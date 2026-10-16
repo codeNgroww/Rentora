@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -233,6 +234,25 @@ export class PropertiesController {
     };
   }
 
+  @Delete('properties/:id')
+  deleteProperty(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.properties.findIndex(
+      (p) => p.id === id && p.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Property not found');
+
+    const deleted = this.dataStore.properties.splice(idx, 1)[0];
+    // Also remove associated units
+    this.dataStore.units = this.dataStore.units.filter((u) => u.propertyId !== id);
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
+    };
+  }
+
   @Get('units')
   listAllUnits(@Headers('x-workspace-id') wsId?: string, @Query('propertyId') propId?: string) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
@@ -241,7 +261,6 @@ export class PropertiesController {
       units = units.filter((u) => u.propertyId === propId);
     }
 
-    // Enrich with property name
     const enriched = units.map((u) => {
       const prop = this.dataStore.properties.find((p) => p.id === u.propertyId);
       return {
@@ -253,6 +272,61 @@ export class PropertiesController {
     return {
       success: true,
       data: enriched,
+    };
+  }
+
+  @Get('units/:id')
+  getUnit(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const unit = this.dataStore.units.find(
+      (u) => u.id === id && u.workspaceId === effectiveWsId
+    );
+    if (!unit) throw new NotFoundException('Unit not found');
+    return {
+      success: true,
+      data: unit,
+    };
+  }
+
+  @Patch('units/:id')
+  updateUnit(
+    @Param('id') id: string,
+    @Headers('x-workspace-id') wsId: string | undefined,
+    @Body() body: Partial<Unit>
+  ) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.units.findIndex(
+      (u) => u.id === id && u.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Unit not found');
+
+    this.dataStore.units[idx] = {
+      ...this.dataStore.units[idx],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: this.dataStore.units[idx],
+    };
+  }
+
+  @Delete('units/:id')
+  deleteUnit(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.units.findIndex(
+      (u) => u.id === id && u.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Unit not found');
+
+    const deleted = this.dataStore.units.splice(idx, 1)[0];
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
     };
   }
 }

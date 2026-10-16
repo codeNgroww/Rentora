@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Unit } from '@rental-saas/contracts';
 
 interface AddUnitModalProps {
   propertyId: string;
   propertyName?: string;
+  unit?: Unit | null;
   onClose: () => void;
   onSubmit: (propId: string, data: any) => Promise<void>;
 }
@@ -12,15 +14,17 @@ interface AddUnitModalProps {
 export function AddUnitModal({
   propertyId,
   propertyName,
+  unit,
   onClose,
   onSubmit,
 }: AddUnitModalProps) {
-  const [unitNumber, setUnitNumber] = useState('');
-  const [floor, setFloor] = useState('');
-  const [bedrooms, setBedrooms] = useState(1);
-  const [bathrooms, setBathrooms] = useState(1);
-  const [squareFeet, setSquareFeet] = useState('');
-  const [marketRent, setMarketRent] = useState('');
+  const [unitNumber, setUnitNumber] = useState(unit?.unitNumber || '');
+  const [floor, setFloor] = useState(unit?.floor || '');
+  const [bedrooms, setBedrooms] = useState(unit?.bedrooms ?? 1);
+  const [bathrooms, setBathrooms] = useState(unit?.bathrooms ?? 1);
+  const [squareFeet, setSquareFeet] = useState(unit?.squareFeet ? String(unit.squareFeet) : '');
+  const [marketRent, setMarketRent] = useState(unit?.marketRent || '');
+  const [status, setStatus] = useState(unit?.status || 'vacant');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -41,11 +45,11 @@ export function AddUnitModal({
         bathrooms: Number(bathrooms),
         squareFeet: squareFeet ? parseFloat(squareFeet) : null,
         marketRent: rentNum.toFixed(2),
-        status: 'vacant',
+        status,
       });
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to add unit');
+      setErrorMsg(err.message || (unit ? 'Failed to update unit' : 'Failed to add unit'));
     } finally {
       setIsSubmitting(false);
     }
@@ -56,7 +60,7 @@ export function AddUnitModal({
       <div className="modal-content" style={{ maxWidth: '480px' }}>
         <div className="modal-header">
           <div>
-            <h3 className="modal-title">Add Unit</h3>
+            <h3 className="modal-title">{unit ? 'Edit Unit' : 'Add Unit'}</h3>
             <p style={{ fontSize: '11px', color: '#64748b' }}>For {propertyName || 'Property'}</p>
           </div>
           <button className="modal-close" onClick={onClose}>
@@ -162,7 +166,7 @@ export function AddUnitModal({
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Adding...' : 'Add Unit'}
+              {isSubmitting ? (unit ? 'Saving...' : 'Adding...') : unit ? 'Save Changes' : 'Add Unit'}
             </button>
           </div>
         </form>

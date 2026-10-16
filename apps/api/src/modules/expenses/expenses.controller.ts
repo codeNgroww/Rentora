@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -364,6 +365,23 @@ export class ExpensesController {
     return {
       success: true,
       data: existing,
+    };
+  }
+
+  @Delete('expenses/:id')
+  deleteExpense(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.expenses.findIndex(
+      (e) => e.id === id && e.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Expense not found');
+
+    const deleted = this.dataStore.expenses.splice(idx, 1)[0];
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
     };
   }
 

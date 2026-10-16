@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
 import { RentCharge, Payment, Tenant, Property, Unit } from '@rental-saas/contracts';
 
 interface RentPaymentsScreenProps {
@@ -11,6 +11,10 @@ interface RentPaymentsScreenProps {
   properties: Property[];
   units: Unit[];
   onOpenRecordPayment: () => void;
+  onEditCharge?: (charge: RentCharge) => void;
+  onDeleteCharge?: (id: string) => Promise<void>;
+  onEditPayment?: (payment: Payment) => void;
+  onDeletePayment?: (id: string) => Promise<void>;
 }
 
 export function RentPaymentsScreen({
@@ -20,6 +24,10 @@ export function RentPaymentsScreen({
   properties,
   units,
   onOpenRecordPayment,
+  onEditCharge,
+  onDeleteCharge,
+  onEditPayment,
+  onDeletePayment,
 }: RentPaymentsScreenProps) {
   const [activeTab, setActiveTab] = useState<'charges' | 'payments'>('charges');
 
@@ -114,6 +122,7 @@ export function RentPaymentsScreen({
                     <th>Paid</th>
                     <th>Outstanding</th>
                     <th>Status</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -150,6 +159,34 @@ export function RentPaymentsScreen({
                         <td>
                           <span className={`badge ${statusClass}`}>{c.status}</span>
                         </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                            {onEditCharge && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '4px 8px' }}
+                                title="Edit Charge"
+                                onClick={() => onEditCharge(c)}
+                              >
+                                <Edit2 size={13} />
+                              </button>
+                            )}
+                            {onDeleteCharge && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '4px 8px', color: '#dc2626' }}
+                                title="Delete Charge"
+                                onClick={() => {
+                                  if (confirm('Are you sure you want to delete this rent charge record?')) {
+                                    onDeleteCharge(c.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
                       </tr>
                     );
                   })}
@@ -177,6 +214,7 @@ export function RentPaymentsScreen({
                     <th>Reference #</th>
                     <th>Amount Paid</th>
                     <th>Notes</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -208,6 +246,34 @@ export function RentPaymentsScreen({
                         </td>
                         <td style={{ fontSize: '12px', color: '#475569' }}>
                           {p.notes || '—'}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                            {onEditPayment && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '4px 8px' }}
+                                title="Edit Payment"
+                                onClick={() => onEditPayment(p)}
+                              >
+                                <Edit2 size={13} />
+                              </button>
+                            )}
+                            {onDeletePayment && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '4px 8px', color: '#dc2626' }}
+                                title="Delete Payment"
+                                onClick={() => {
+                                  if (confirm('Are you sure you want to delete this payment record? This will adjust charge balances.')) {
+                                    onDeletePayment(p.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

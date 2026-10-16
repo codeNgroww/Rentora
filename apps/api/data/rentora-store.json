@@ -1214,7 +1214,7 @@
       "type": "rent_overdue",
       "title": "Rent Overdue: Unit 2001",
       "message": "Elena Rostova has an overdue rent balance of AED 12,083.33 due on 2026-10-01.",
-      "isRead": false,
+      "isRead": true,
       "linkUrl": "/rent",
       "createdAt": "2026-10-05T08:00:00Z"
     },
@@ -1225,7 +1225,7 @@
       "type": "lease_expiring",
       "title": "Lease Expiring Soon: Unit 2001",
       "message": "Lease for Downtown Luxury Heights 2001 ends on 2026-10-31 (17 days remaining).",
-      "isRead": false,
+      "isRead": true,
       "linkUrl": "/leases",
       "createdAt": "2026-10-01T08:00:00Z"
     }
@@ -1376,5 +1376,5 @@
       }
     }
   ],
-  "updatedAt": "2026-10-15T13:01:16.681Z"
+  "updatedAt": "2026-10-16T11:46:18.113Z"
 }

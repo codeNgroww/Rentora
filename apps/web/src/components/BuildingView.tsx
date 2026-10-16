@@ -28,6 +28,8 @@ interface BuildingViewProps {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onRecordPaymentForUnit?: (unit: Unit) => void;
+  onEditUnit?: (unit: Unit) => void;
+  onDeleteUnit?: (unitId: string) => void;
 }
 
 export function BuildingView({
@@ -37,6 +39,8 @@ export function BuildingView({
   onPrevMonth,
   onNextMonth,
   onRecordPaymentForUnit,
+  onEditUnit,
+  onDeleteUnit,
 }: BuildingViewProps) {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [search, setSearch] = useState<string>('');
@@ -906,22 +910,54 @@ export function BuildingView({
               )}
             </div>
 
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setSelectedUnit(null)}>
-                Close
-              </button>
-              {selectedUnit.status === 'occupied' && (
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    const u = selectedUnit;
-                    setSelectedUnit(null);
-                    if (onRecordPaymentForUnit) onRecordPaymentForUnit(u);
-                  }}
-                >
-                  Record Payment
+            <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {onDeleteUnit && (
+                  <button
+                    className="btn btn-sm"
+                    style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                    onClick={() => {
+                      const u = selectedUnit;
+                      if (window.confirm(`Are you sure you want to delete Unit ${u.unitNumber}?`)) {
+                        setSelectedUnit(null);
+                        onDeleteUnit(u.id);
+                      }
+                    }}
+                  >
+                    Delete Unit
+                  </button>
+                )}
+                {onEditUnit && (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => {
+                      const u = selectedUnit;
+                      setSelectedUnit(null);
+                      onEditUnit(u);
+                    }}
+                  >
+                    Edit Unit
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn btn-secondary" onClick={() => setSelectedUnit(null)}>
+                  Close
                 </button>
-              )}
+                {selectedUnit.status === 'occupied' && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      const u = selectedUnit;
+                      setSelectedUnit(null);
+                      if (onRecordPaymentForUnit) onRecordPaymentForUnit(u);
+                    }}
+                  >
+                    Record Payment
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

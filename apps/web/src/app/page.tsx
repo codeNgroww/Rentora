@@ -58,13 +58,23 @@ export default function Home() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
 
-  // Modal visibility states
+  // Modal visibility & Editing states
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+
   const [isAddUnitOpen, setIsAddUnitOpen] = useState(false);
+  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [addUnitPropId, setAddUnitPropId] = useState('');
+
   const [isAddTenantOpen, setIsAddTenantOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+
   const [isAddLeaseOpen, setIsAddLeaseOpen] = useState(false);
+  const [editingLease, setEditingLease] = useState<Lease | null>(null);
+
   const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
 
   // Load initial data
@@ -145,9 +155,19 @@ export default function Home() {
     setPeriod(`${newY}-${newM}`);
   };
 
-  // Actions
+  // Expenses Actions
   const handleAddExpense = async (data: any) => {
     await api.createExpense(data);
+    await loadData();
+  };
+
+  const handleUpdateExpense = async (id: string, data: any) => {
+    await api.updateExpense(id, data);
+    await loadData();
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    await api.deleteExpense(id);
     await loadData();
   };
 
@@ -156,28 +176,101 @@ export default function Home() {
     await loadData();
   };
 
+  // Property Actions
   const handleAddProperty = async (data: any) => {
     await api.createProperty(data);
     await loadData();
   };
 
+  const handleUpdateProperty = async (id: string, data: any) => {
+    await api.updateProperty(id, data);
+    await loadData();
+  };
+
+  const handleDeleteProperty = async (id: string) => {
+    await api.deleteProperty(id);
+    await loadData();
+  };
+
+  // Unit Actions
   const handleAddUnit = async (propId: string, data: any) => {
     await api.createUnit(propId, data);
     await loadData();
   };
 
+  const handleUpdateUnit = async (id: string, data: any) => {
+    await api.updateUnit(id, data);
+    await loadData();
+  };
+
+  const handleDeleteUnit = async (id: string) => {
+    await api.deleteUnit(id);
+    await loadData();
+  };
+
+  // Tenant Actions
   const handleAddTenant = async (data: any) => {
     await api.createTenant(data);
     await loadData();
   };
 
+  const handleUpdateTenant = async (id: string, data: any) => {
+    await api.updateTenant(id, data);
+    await loadData();
+  };
+
+  const handleDeleteTenant = async (id: string) => {
+    await api.deleteTenant(id);
+    await loadData();
+  };
+
+  // Lease Actions
   const handleAddLease = async (data: any) => {
     await api.createLease(data);
     await loadData();
   };
 
+  const handleUpdateLease = async (id: string, data: any) => {
+    await api.updateLease(id, data);
+    await loadData();
+  };
+
+  const handleDeleteLease = async (id: string) => {
+    await api.deleteLease(id);
+    await loadData();
+  };
+
+  // Rent & Payment Actions
   const handleRecordPayment = async (data: any) => {
     await api.recordPayment(data);
+    await loadData();
+  };
+
+  const handleEditCharge = async (charge: RentCharge) => {
+    const newAmount = prompt('Enter updated installment amount (AED):', charge.amount);
+    if (newAmount === null) return;
+    const newDate = prompt('Enter updated due date (YYYY-MM-DD):', charge.dueDate);
+    if (newDate === null) return;
+    await api.updateRentCharge(charge.id, { amount: newAmount, dueDate: newDate });
+    await loadData();
+  };
+
+  const handleDeleteCharge = async (id: string) => {
+    await api.deleteRentCharge(id);
+    await loadData();
+  };
+
+  const handleEditPayment = async (payment: Payment) => {
+    const newRef = prompt('Enter payment reference #:', payment.reference || '');
+    if (newRef === null) return;
+    const newNotes = prompt('Enter payment notes:', payment.notes || '');
+    if (newNotes === null) return;
+    await api.updatePayment(payment.id, { reference: newRef, notes: newNotes });
+    await loadData();
+  };
+
+  const handleDeletePayment = async (id: string) => {
+    await api.deletePayment(id);
     await loadData();
   };
 
@@ -246,7 +339,10 @@ export default function Home() {
           period={period}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
-          onOpenAddExpense={() => setIsAddExpenseOpen(true)}
+          onOpenAddExpense={() => {
+            setEditingExpense(null);
+            setIsAddExpenseOpen(true);
+          }}
           notifications={notifications}
           onMarkNotificationRead={handleMarkNotificationRead}
         />
@@ -270,7 +366,12 @@ export default function Home() {
                   properties={properties}
                   units={units}
                   period={period}
-                  onOpenAddModal={() => setIsAddExpenseOpen(true)}
+                  onOpenAddModal={() => {
+                    setEditingExpense(null);
+                    setIsAddExpenseOpen(true);
+                  }}
+                  onEditExpense={(expense) => setEditingExpense(expense)}
+                  onDeleteExpense={handleDeleteExpense}
                   onVoidExpense={handleVoidExpense}
                   onExportCsv={() => handleExportCsv('expenses')}
                 />
@@ -283,11 +384,23 @@ export default function Home() {
                   period={period}
                   onPrevMonth={handlePrevMonth}
                   onNextMonth={handleNextMonth}
-                  onOpenAddProperty={() => setIsAddPropertyOpen(true)}
+                  onOpenAddProperty={() => {
+                    setEditingProperty(null);
+                    setIsAddPropertyOpen(true);
+                  }}
+                  onEditProperty={(prop) => setEditingProperty(prop)}
+                  onDeleteProperty={handleDeleteProperty}
                   onOpenAddUnit={(propId) => {
+                    setEditingUnit(null);
                     setAddUnitPropId(propId);
                     setIsAddUnitOpen(true);
                   }}
+                  onEditUnit={(unit) => {
+                    setEditingUnit(unit);
+                    setAddUnitPropId(unit.propertyId);
+                    setIsAddUnitOpen(true);
+                  }}
+                  onDeleteUnit={handleDeleteUnit}
                   onRecordPaymentForUnit={(u) => {
                     setIsRecordPaymentOpen(true);
                   }}
@@ -300,8 +413,18 @@ export default function Home() {
                   leases={leases}
                   properties={properties}
                   units={units}
-                  onOpenAddTenant={() => setIsAddTenantOpen(true)}
-                  onOpenAddLease={() => setIsAddLeaseOpen(true)}
+                  onOpenAddTenant={() => {
+                    setEditingTenant(null);
+                    setIsAddTenantOpen(true);
+                  }}
+                  onEditTenant={(tenant) => setEditingTenant(tenant)}
+                  onDeleteTenant={handleDeleteTenant}
+                  onOpenAddLease={() => {
+                    setEditingLease(null);
+                    setIsAddLeaseOpen(true);
+                  }}
+                  onEditLease={(lease) => setEditingLease(lease)}
+                  onDeleteLease={handleDeleteLease}
                 />
               )}
 
@@ -313,6 +436,10 @@ export default function Home() {
                   properties={properties}
                   units={units}
                   onOpenRecordPayment={() => setIsRecordPaymentOpen(true)}
+                  onEditCharge={handleEditCharge}
+                  onDeleteCharge={handleDeleteCharge}
+                  onEditPayment={handleEditPayment}
+                  onDeletePayment={handleDeletePayment}
                 />
               )}
 
@@ -340,47 +467,110 @@ export default function Home() {
       </div>
 
       {/* Interactive Modals */}
-      {isAddExpenseOpen && (
+      {(isAddExpenseOpen || editingExpense) && (
         <AddExpenseModal
+          expense={editingExpense}
           categories={categories}
           properties={properties}
           units={units}
           vendors={vendors}
-          onClose={() => setIsAddExpenseOpen(false)}
-          onSubmit={handleAddExpense}
+          onClose={() => {
+            setIsAddExpenseOpen(false);
+            setEditingExpense(null);
+          }}
+          onSubmit={async (data) => {
+            if (editingExpense) {
+              await handleUpdateExpense(editingExpense.id, data);
+            } else {
+              await handleAddExpense(data);
+            }
+          }}
         />
       )}
 
-      {isAddPropertyOpen && (
+      {(isAddPropertyOpen || editingProperty) && (
         <AddPropertyModal
-          onClose={() => setIsAddPropertyOpen(false)}
-          onSubmit={handleAddProperty}
+          property={editingProperty}
+          onClose={() => {
+            setIsAddPropertyOpen(false);
+            setEditingProperty(null);
+          }}
+          onSubmit={async (data) => {
+            if (editingProperty) {
+              await handleUpdateProperty(editingProperty.id, data);
+            } else {
+              await handleAddProperty(data);
+            }
+          }}
         />
       )}
 
-      {isAddUnitOpen && (
+      {(isAddUnitOpen || editingUnit) && (
         <AddUnitModal
-          propertyId={addUnitPropId}
-          propertyName={properties.find((p) => p.id === addUnitPropId)?.name}
-          onClose={() => setIsAddUnitOpen(false)}
-          onSubmit={handleAddUnit}
+          unit={editingUnit}
+          propertyId={addUnitPropId || editingUnit?.propertyId || ''}
+          propertyName={
+            properties.find((p) => p.id === (addUnitPropId || editingUnit?.propertyId))?.name
+          }
+          onClose={() => {
+            setIsAddUnitOpen(false);
+            setEditingUnit(null);
+          }}
+          onSubmit={async (propId, data) => {
+            if (editingUnit) {
+              await handleUpdateUnit(editingUnit.id, data);
+            } else {
+              await handleAddUnit(propId, data);
+            }
+          }}
         />
       )}
 
-      {isAddTenantOpen && (
+      {(isAddTenantOpen || editingTenant) && (
         <AddTenantModal
-          onClose={() => setIsAddTenantOpen(false)}
-          onSubmit={handleAddTenant}
+          tenant={editingTenant}
+          onClose={() => {
+            setIsAddTenantOpen(false);
+            setEditingTenant(null);
+          }}
+          onSubmit={async (data) => {
+            if (editingTenant) {
+              await handleUpdateTenant(editingTenant.id, data);
+            } else {
+              await handleAddTenant(data);
+            }
+          }}
         />
       )}
 
-      {isAddLeaseOpen && (
+      {(isAddLeaseOpen || editingLease) && (
         <AddLeaseModal
+          lease={editingLease}
           properties={properties}
           units={units}
           tenants={tenants}
-          onClose={() => setIsAddLeaseOpen(false)}
-          onSubmit={handleAddLease}
+          onClose={() => {
+            setIsAddLeaseOpen(false);
+            setEditingLease(null);
+          }}
+          onSubmit={async (data) => {
+            if (editingLease) {
+              await handleUpdateLease(editingLease.id, data);
+            } else {
+              await handleAddLease(data);
+            }
+          }}
+        />
+      )}
+
+      {isRecordPaymentOpen && (
+        <RecordPaymentModal
+          tenants={tenants}
+          properties={properties}
+          units={units}
+          charges={rentCharges}
+          onClose={() => setIsRecordPaymentOpen(false)}
+          onSubmit={handleRecordPayment}
         />
       )}
 

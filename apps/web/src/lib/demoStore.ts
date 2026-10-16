@@ -167,12 +167,51 @@ class DemoStore {
 
     if (path.startsWith('/properties/') && !path.includes('/units')) {
       const id = path.replace('/properties/', '');
+      if (method === 'PATCH') {
+        const prop = this.state.properties.find((p) => p.id === id);
+        if (prop) {
+          Object.assign(prop, body, { updatedAt: new Date().toISOString() });
+          this.persist();
+        }
+        return prop as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.properties.findIndex((p) => p.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.properties.splice(idx, 1)[0];
+          this.state.units = this.state.units.filter((u) => u.propertyId !== id);
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
       const prop = this.state.properties.find((p) => p.id === id);
       const propUnits = this.state.units.filter((u) => u.propertyId === id);
       return { ...prop, units: propUnits } as unknown as T;
     }
 
     // --- Units ---
+    if (path.startsWith('/units/')) {
+      const id = path.replace('/units/', '');
+      if (method === 'PATCH') {
+        const unit = this.state.units.find((u) => u.id === id);
+        if (unit) {
+          Object.assign(unit, body, { updatedAt: new Date().toISOString() });
+          this.persist();
+        }
+        return unit as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.units.findIndex((u) => u.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.units.splice(idx, 1)[0];
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      const unit = this.state.units.find((u) => u.id === id);
+      return unit as unknown as T;
+    }
+
     if (path === '/units') {
       const propId = params.get('propertyId');
       if (propId) {
@@ -206,6 +245,27 @@ class DemoStore {
     }
 
     // --- Tenants ---
+    if (path.startsWith('/tenants/')) {
+      const id = path.replace('/tenants/', '');
+      if (method === 'PATCH') {
+        const tenant = this.state.tenants.find((t) => t.id === id);
+        if (tenant) {
+          Object.assign(tenant, body);
+          this.persist();
+        }
+        return tenant as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.tenants.findIndex((t) => t.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.tenants.splice(idx, 1)[0];
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      return this.state.tenants.find((t) => t.id === id) as unknown as T;
+    }
+
     if (path === '/tenants') {
       if (method === 'POST') {
         const newTenant: Tenant = {
@@ -227,6 +287,33 @@ class DemoStore {
     }
 
     // --- Leases ---
+    if (path.startsWith('/leases/')) {
+      const id = path.replace('/leases/', '');
+      if (method === 'PATCH') {
+        const lease = this.state.leases.find((l) => l.id === id);
+        if (lease) {
+          Object.assign(lease, body, { updatedAt: new Date().toISOString() });
+          this.persist();
+        }
+        return lease as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.leases.findIndex((l) => l.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.leases.splice(idx, 1)[0];
+          const u = this.state.units.find((unit) => unit.id === deleted.unitId);
+          if (u) {
+            u.status = 'vacant';
+            u.currentTenantName = undefined;
+          }
+          this.state.rentCharges = this.state.rentCharges.filter((c) => c.leaseId !== deleted.id);
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      return this.state.leases.find((l) => l.id === id) as unknown as T;
+    }
+
     if (path === '/leases') {
       if (method === 'POST') {
         const newLease: Lease = {
@@ -336,6 +423,27 @@ class DemoStore {
       return list as unknown as T;
     }
 
+    if (path.startsWith('/expenses/')) {
+      const id = path.replace('/expenses/', '');
+      if (method === 'PATCH') {
+        const expense = this.state.expenses.find((e) => e.id === id);
+        if (expense) {
+          Object.assign(expense, body, { updatedAt: new Date().toISOString() });
+          this.persist();
+        }
+        return expense as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.expenses.findIndex((e) => e.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.expenses.splice(idx, 1)[0];
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      return this.state.expenses.find((e) => e.id === id) as unknown as T;
+    }
+
     if (path.startsWith('/expenses/') && path.endsWith('/void')) {
       const id = path.split('/')[2];
       const expense = this.state.expenses.find((e) => e.id === id);
@@ -397,6 +505,48 @@ class DemoStore {
           unitNumber: u?.unitNumber || '',
         };
       }) as unknown as T;
+    }
+
+    if (path.startsWith('/rent-charges/')) {
+      const id = path.replace('/rent-charges/', '');
+      if (method === 'PATCH') {
+        const charge = this.state.rentCharges.find((c) => c.id === id);
+        if (charge) {
+          Object.assign(charge, body, { updatedAt: new Date().toISOString() });
+          this.persist();
+        }
+        return charge as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.rentCharges.findIndex((c) => c.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.rentCharges.splice(idx, 1)[0];
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      return this.state.rentCharges.find((c) => c.id === id) as unknown as T;
+    }
+
+    if (path.startsWith('/payments/')) {
+      const id = path.replace('/payments/', '');
+      if (method === 'PATCH') {
+        const payment = this.state.payments.find((p) => p.id === id);
+        if (payment) {
+          Object.assign(payment, body);
+          this.persist();
+        }
+        return payment as unknown as T;
+      }
+      if (method === 'DELETE') {
+        const idx = this.state.payments.findIndex((p) => p.id === id);
+        if (idx !== -1) {
+          const deleted = this.state.payments.splice(idx, 1)[0];
+          this.persist();
+          return deleted as unknown as T;
+        }
+      }
+      return this.state.payments.find((p) => p.id === id) as unknown as T;
     }
 
     if (path === '/payments') {

@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 import { Expense, ExpenseCategory, Property, Unit } from '@rental-saas/contracts';
 
@@ -22,6 +24,8 @@ interface ExpensesScreenProps {
   units: Unit[];
   period: string;
   onOpenAddModal: () => void;
+  onEditExpense?: (expense: Expense) => void;
+  onDeleteExpense?: (id: string) => Promise<void>;
   onVoidExpense: (id: string, reason: string) => Promise<void>;
   onExportCsv: () => void;
 }
@@ -33,6 +37,8 @@ export function ExpensesScreen({
   units,
   period,
   onOpenAddModal,
+  onEditExpense,
+  onDeleteExpense,
   onVoidExpense,
   onExportCsv,
 }: ExpensesScreenProps) {
@@ -322,19 +328,45 @@ export function ExpensesScreen({
                             </span>
                           </td>
                           <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            {!isVoided ? (
-                              <button
-                                className="btn btn-sm btn-secondary"
-                                style={{ padding: '4px 8px', color: '#ef4444', borderColor: '#fee2e2' }}
-                                title="Void expense"
-                                onClick={() => setVoidingExpenseId(exp.id)}
-                              >
-                                <Ban size={13} />
-                                <span>Void</span>
-                              </button>
-                            ) : (
-                              <span style={{ fontSize: '11px', color: '#94a3b8' }}>Voided</span>
-                            )}
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {!isVoided && onEditExpense && (
+                                <button
+                                  className="btn btn-sm btn-secondary"
+                                  style={{ padding: '4px 7px' }}
+                                  title="Edit expense"
+                                  onClick={() => onEditExpense(exp)}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              )}
+                              {!isVoided ? (
+                                <button
+                                  className="btn btn-sm btn-secondary"
+                                  style={{ padding: '4px 7px', color: '#ef4444', borderColor: '#fee2e2' }}
+                                  title="Void expense"
+                                  onClick={() => setVoidingExpenseId(exp.id)}
+                                >
+                                  <Ban size={12} />
+                                  <span>Void</span>
+                                </button>
+                              ) : (
+                                <span style={{ fontSize: '11px', color: '#94a3b8' }}>Voided</span>
+                              )}
+                              {onDeleteExpense && (
+                                <button
+                                  className="btn btn-sm"
+                                  style={{ padding: '4px 7px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                                  title="Delete expense"
+                                  onClick={() => {
+                                    if (window.confirm(`Are you sure you want to permanently delete this expense: "${exp.description}"?`)) {
+                                      onDeleteExpense(exp.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

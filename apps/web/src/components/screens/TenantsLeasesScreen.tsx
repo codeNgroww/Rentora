@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, FileText, Plus, Phone, Mail, Calendar, ShieldCheck } from 'lucide-react';
+import { Users, FileText, Plus, Phone, Mail, Calendar, ShieldCheck, Edit2, Trash2 } from 'lucide-react';
 import { Tenant, Lease, Property, Unit } from '@rental-saas/contracts';
 import { TenancyContractModal } from '../modals/TenancyContractModal';
 
@@ -11,7 +11,11 @@ interface TenantsLeasesScreenProps {
   properties: Property[];
   units: Unit[];
   onOpenAddTenant: () => void;
+  onEditTenant?: (tenant: Tenant) => void;
+  onDeleteTenant?: (id: string) => Promise<void>;
   onOpenAddLease: () => void;
+  onEditLease?: (lease: Lease) => void;
+  onDeleteLease?: (id: string) => Promise<void>;
 }
 
 export function TenantsLeasesScreen({
@@ -20,7 +24,11 @@ export function TenantsLeasesScreen({
   properties,
   units,
   onOpenAddTenant,
+  onEditTenant,
+  onDeleteTenant,
   onOpenAddLease,
+  onEditLease,
+  onDeleteLease,
 }: TenantsLeasesScreenProps) {
   const [activeTab, setActiveTab] = useState<'leases' | 'tenants'>('leases');
   const [selectedContractLease, setSelectedContractLease] = useState<Lease | null>(null);
@@ -174,25 +182,51 @@ export function TenantsLeasesScreen({
                             <span className={`badge ${statusClass}`}>{l.status}</span>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            <button
-                              className="btn btn-secondary btn-sm"
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                fontSize: '11.5px',
-                                padding: '5px 10px',
-                                borderColor: '#bbf7d0',
-                                color: '#166534',
-                                background: '#f0fdf4',
-                                fontWeight: 600,
-                              }}
-                              onClick={() => setSelectedContractLease(l)}
-                              title="Generate official 1-year Ejari tenancy contract"
-                            >
-                              <FileText size={13} color="#166534" />
-                              <span>Generate Contract</span>
-                            </button>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  fontSize: '11.5px',
+                                  padding: '5px 8px',
+                                  borderColor: '#bbf7d0',
+                                  color: '#166534',
+                                  background: '#f0fdf4',
+                                  fontWeight: 600,
+                                }}
+                                onClick={() => setSelectedContractLease(l)}
+                                title="Generate official 1-year Ejari tenancy contract"
+                              >
+                                <FileText size={13} color="#166534" />
+                                <span>Contract</span>
+                              </button>
+                              {onEditLease && (
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: '5px 8px', fontSize: '11.5px' }}
+                                  title="Edit Lease"
+                                  onClick={() => onEditLease(l)}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              )}
+                              {onDeleteLease && (
+                                <button
+                                  className="btn btn-sm"
+                                  style={{ padding: '5px 8px', fontSize: '11.5px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                                  title="Delete Lease"
+                                  onClick={() => {
+                                    if (window.confirm(`Are you sure you want to delete this lease for ${tenant?.fullName || 'tenant'}? Associated rent charges will also be removed.`)) {
+                                      onDeleteLease(l.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -227,6 +261,7 @@ export function TenantsLeasesScreen({
                       <th>Emirates ID</th>
                       <th>Preferred Channel</th>
                       <th>Internal Notes</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -253,6 +288,34 @@ export function TenantsLeasesScreen({
                         </td>
                         <td style={{ fontSize: '12px', color: '#475569' }}>
                           {t.notes || '—'}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div style={{ display: 'inline-flex', gap: '6px' }}>
+                            {onEditTenant && (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ padding: '3px 8px', fontSize: '11.5px' }}
+                                title="Edit Tenant"
+                                onClick={() => onEditTenant(t)}
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                            )}
+                            {onDeleteTenant && (
+                              <button
+                                className="btn btn-sm"
+                                style={{ padding: '3px 8px', fontSize: '11.5px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                                title="Delete Tenant"
+                                onClick={() => {
+                                  if (window.confirm(`Are you sure you want to delete ${t.fullName}?`)) {
+                                    onDeleteTenant(t.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}

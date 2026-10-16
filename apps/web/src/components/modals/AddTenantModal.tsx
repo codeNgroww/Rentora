@@ -1,19 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Tenant } from '@rental-saas/contracts';
 
 interface AddTenantModalProps {
+  tenant?: Tenant | null;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
 
-export function AddTenantModal({ onClose, onSubmit }: AddTenantModalProps) {
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [emiratesId, setEmiratesId] = useState('');
-  const [preferredContact, setPreferredContact] = useState<'email' | 'phone' | 'whatsapp'>('email');
-  const [notes, setNotes] = useState('');
+export function AddTenantModal({ tenant, onClose, onSubmit }: AddTenantModalProps) {
+  const [fullName, setFullName] = useState(tenant?.fullName || '');
+  const [email, setEmail] = useState(tenant?.email || '');
+  const [phoneNumber, setPhoneNumber] = useState(tenant?.phoneNumber || '');
+  const [emiratesId, setEmiratesId] = useState(tenant?.emiratesId || '');
+  const [preferredContact, setPreferredContact] = useState<'email' | 'phone' | 'whatsapp'>(
+    tenant?.preferredContact || 'email'
+  );
+  const [notes, setNotes] = useState(tenant?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -36,7 +40,7 @@ export function AddTenantModal({ onClose, onSubmit }: AddTenantModalProps) {
       });
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to create tenant profile');
+      setErrorMsg(err.message || (tenant ? 'Failed to update tenant profile' : 'Failed to create tenant profile'));
     } finally {
       setIsSubmitting(false);
     }
@@ -46,7 +50,7 @@ export function AddTenantModal({ onClose, onSubmit }: AddTenantModalProps) {
     <div className="modal-overlay">
       <div className="modal-content" style={{ maxWidth: '480px' }}>
         <div className="modal-header">
-          <h3 className="modal-title">New Tenant Profile</h3>
+          <h3 className="modal-title">{tenant ? 'Edit Tenant Profile' : 'New Tenant Profile'}</h3>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -150,7 +154,7 @@ export function AddTenantModal({ onClose, onSubmit }: AddTenantModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Tenant'}
+              {isSubmitting ? (tenant ? 'Updating...' : 'Saving...') : tenant ? 'Update Tenant' : 'Save Tenant'}
             </button>
           </div>
         </form>

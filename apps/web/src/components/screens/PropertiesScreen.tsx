@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Plus, MapPin, Home, Key, Layers, Grid, Eye } from 'lucide-react';
+import { Building2, Plus, MapPin, Home, Key, Layers, Grid, Eye, Edit2, Trash2 } from 'lucide-react';
 import { Property, Unit } from '@rental-saas/contracts';
 import { BuildingView } from '../BuildingView';
 
@@ -12,7 +12,11 @@ interface PropertiesScreenProps {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onOpenAddProperty: () => void;
+  onEditProperty?: (property: Property) => void;
+  onDeleteProperty?: (propertyId: string) => void;
   onOpenAddUnit: (propId: string) => void;
+  onEditUnit?: (unit: Unit) => void;
+  onDeleteUnit?: (unitId: string) => void;
   onRecordPaymentForUnit?: (unit: Unit) => void;
 }
 
@@ -23,7 +27,11 @@ export function PropertiesScreen({
   onPrevMonth,
   onNextMonth,
   onOpenAddProperty,
+  onEditProperty,
+  onDeleteProperty,
   onOpenAddUnit,
+  onEditUnit,
+  onDeleteUnit,
   onRecordPaymentForUnit,
 }: PropertiesScreenProps) {
   const [selectedPropId, setSelectedPropId] = useState<string>(properties[0]?.id || '');
@@ -152,6 +160,8 @@ export function PropertiesScreen({
           onPrevMonth={onPrevMonth}
           onNextMonth={onNextMonth}
           onRecordPaymentForUnit={onRecordPaymentForUnit}
+          onEditUnit={onEditUnit}
+          onDeleteUnit={onDeleteUnit}
         />
       )}
 
@@ -185,7 +195,7 @@ export function PropertiesScreen({
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <div className="card-header" style={{ padding: '16px 20px' }}>
+                  <div className="card-header" style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a' }}>
                         {prop.name}
@@ -197,9 +207,41 @@ export function PropertiesScreen({
                         </span>
                       </div>
                     </div>
-                    <span className="badge badge-green" style={{ fontSize: '10.5px' }}>
-                      {prop.emirate}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span className="badge badge-green" style={{ fontSize: '10.5px' }}>
+                        {prop.emirate}
+                      </span>
+                      {onEditProperty && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '3px 7px', fontSize: '11px' }}
+                          title="Edit Property"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditProperty(prop);
+                          }}
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                      )}
+                      {onDeleteProperty && (
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          style={{ padding: '3px 7px', fontSize: '11px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                          title="Delete Property"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Are you sure you want to delete ${prop.name}? All units will be deleted as well.`)) {
+                              onDeleteProperty(prop.id);
+                            }
+                          }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div
                     className="card-body"
@@ -262,6 +304,7 @@ export function PropertiesScreen({
                       <th>Tenant</th>
                       <th>Market Rent</th>
                       <th>Payment Status</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -295,6 +338,34 @@ export function PropertiesScreen({
                             <span className={`badge ${statusClass}`}>
                               {u.paymentStatus || u.status}
                             </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: '6px' }}>
+                              {onEditUnit && (
+                                <button
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: '3px 8px', fontSize: '11.5px' }}
+                                  title="Edit Unit"
+                                  onClick={() => onEditUnit(u)}
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              )}
+                              {onDeleteUnit && (
+                                <button
+                                  className="btn btn-sm"
+                                  style={{ padding: '3px 8px', fontSize: '11.5px', background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}
+                                  title="Delete Unit"
+                                  onClick={() => {
+                                    if (window.confirm(`Are you sure you want to delete Unit ${u.unitNumber}?`)) {
+                                      onDeleteUnit(u.id);
+                                    }
+                                  }}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );

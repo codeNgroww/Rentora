@@ -2,10 +2,14 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
+  Param,
   Body,
   Query,
   Headers,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { DataStoreService } from '../../database/data-store.service';
 import { RentCharge, Payment, PaymentAllocation } from '@rental-saas/contracts';
@@ -117,6 +121,48 @@ export class RentController {
     return {
       success: true,
       data: newCharge,
+    };
+  }
+
+  @Patch('rent-charges/:id')
+  updateCharge(
+    @Param('id') id: string,
+    @Headers('x-workspace-id') wsId: string | undefined,
+    @Body() body: Partial<RentCharge>
+  ) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.rentCharges.findIndex(
+      (c) => c.id === id && c.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Rent charge not found');
+
+    this.dataStore.rentCharges[idx] = {
+      ...this.dataStore.rentCharges[idx],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: this.dataStore.rentCharges[idx],
+    };
+  }
+
+  @Delete('rent-charges/:id')
+  deleteCharge(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.rentCharges.findIndex(
+      (c) => c.id === id && c.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Rent charge not found');
+
+    const deleted = this.dataStore.rentCharges.splice(idx, 1)[0];
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
     };
   }
 
@@ -341,6 +387,47 @@ export class RentController {
     return {
       success: true,
       data: newPayment,
+    };
+  }
+
+  @Patch('payments/:id')
+  updatePayment(
+    @Param('id') id: string,
+    @Headers('x-workspace-id') wsId: string | undefined,
+    @Body() body: Partial<Payment>
+  ) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.payments.findIndex(
+      (p) => p.id === id && p.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Payment not found');
+
+    this.dataStore.payments[idx] = {
+      ...this.dataStore.payments[idx],
+      ...body,
+    };
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: this.dataStore.payments[idx],
+    };
+  }
+
+  @Delete('payments/:id')
+  deletePayment(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.payments.findIndex(
+      (p) => p.id === id && p.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Payment not found');
+
+    const deleted = this.dataStore.payments.splice(idx, 1)[0];
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
     };
   }
 }

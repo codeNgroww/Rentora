@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   Query,
@@ -81,6 +82,47 @@ export class TenantsLeasesController {
     return {
       success: true,
       data: newTenant,
+    };
+  }
+
+  @Patch('tenants/:id')
+  updateTenant(
+    @Param('id') id: string,
+    @Headers('x-workspace-id') wsId: string | undefined,
+    @Body() body: Partial<Tenant>
+  ) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.tenants.findIndex(
+      (t) => t.id === id && t.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Tenant not found');
+
+    this.dataStore.tenants[idx] = {
+      ...this.dataStore.tenants[idx],
+      ...body,
+    };
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: this.dataStore.tenants[idx],
+    };
+  }
+
+  @Delete('tenants/:id')
+  deleteTenant(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.tenants.findIndex(
+      (t) => t.id === id && t.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Tenant not found');
+
+    const deleted = this.dataStore.tenants.splice(idx, 1)[0];
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: deleted,
     };
   }
 
@@ -232,6 +274,59 @@ export class TenantsLeasesController {
     return {
       success: true,
       data: newLease,
+    };
+  }
+
+  @Patch('leases/:id')
+  updateLease(
+    @Param('id') id: string,
+    @Headers('x-workspace-id') wsId: string | undefined,
+    @Body() body: Partial<Lease>
+  ) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.leases.findIndex(
+      (l) => l.id === id && l.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Lease not found');
+
+    this.dataStore.leases[idx] = {
+      ...this.dataStore.leases[idx],
+      ...body,
+      updatedAt: new Date().toISOString(),
+    };
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: this.dataStore.leases[idx],
+    };
+  }
+
+  @Delete('leases/:id')
+  deleteLease(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
+    const effectiveWsId = this.getEffectiveWsId(wsId);
+    const idx = this.dataStore.leases.findIndex(
+      (l) => l.id === id && l.workspaceId === effectiveWsId
+    );
+    if (idx === -1) throw new NotFoundException('Lease not found');
+
+    const lease = this.dataStore.leases.splice(idx, 1)[0];
+
+    // Vacate unit if it was occupied by this lease
+    const unit = this.dataStore.units.find((u) => u.id === lease.unitId);
+    if (unit && unit.currentLeaseId === lease.id) {
+      unit.status = 'vacant';
+      unit.currentLeaseId = undefined;
+    }
+
+    // Also remove associated rent charges
+    this.dataStore.rentCharges = this.dataStore.rentCharges.filter((c) => c.leaseId !== lease.id);
+
+    this.dataStore.saveToFile();
+
+    return {
+      success: true,
+      data: lease,
     };
   }
 }

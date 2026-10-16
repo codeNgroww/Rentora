@@ -1,21 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { UAEEmirate, PropertyType } from '@rental-saas/contracts';
+import { UAEEmirate, PropertyType, Property } from '@rental-saas/contracts';
 
 interface AddPropertyModalProps {
+  property?: Property | null;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
 }
 
-export function AddPropertyModal({ onClose, onSubmit }: AddPropertyModalProps) {
-  const [name, setName] = useState('');
-  const [type, setType] = useState<PropertyType>('residential');
-  const [emirate, setEmirate] = useState<UAEEmirate>('Dubai');
-  const [communityArea, setCommunityArea] = useState('');
-  const [address, setAddress] = useState('');
-  const [buildingReference, setBuildingReference] = useState('');
-  const [notes, setNotes] = useState('');
+export function AddPropertyModal({ property, onClose, onSubmit }: AddPropertyModalProps) {
+  const [name, setName] = useState(property?.name || '');
+  const [type, setType] = useState<PropertyType>(property?.type || 'residential');
+  const [emirate, setEmirate] = useState<UAEEmirate>(property?.emirate || 'Dubai');
+  const [communityArea, setCommunityArea] = useState(property?.communityArea || '');
+  const [address, setAddress] = useState(property?.address || '');
+  const [buildingReference, setBuildingReference] = useState(property?.buildingReference || '');
+  const [notes, setNotes] = useState(property?.notes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -39,7 +40,7 @@ export function AddPropertyModal({ onClose, onSubmit }: AddPropertyModalProps) {
       });
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to create property');
+      setErrorMsg(err.message || (property ? 'Failed to update property' : 'Failed to create property'));
     } finally {
       setIsSubmitting(false);
     }
@@ -49,7 +50,7 @@ export function AddPropertyModal({ onClose, onSubmit }: AddPropertyModalProps) {
     <div className="modal-overlay">
       <div className="modal-content">
         <div className="modal-header">
-          <h3 className="modal-title">Add Property / Building</h3>
+          <h3 className="modal-title">{property ? 'Edit Property / Building' : 'Add Property / Building'}</h3>
           <button className="modal-close" onClick={onClose}>
             ✕
           </button>
@@ -171,7 +172,7 @@ export function AddPropertyModal({ onClose, onSubmit }: AddPropertyModalProps) {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create Property'}
+              {isSubmitting ? (property ? 'Saving...' : 'Creating...') : property ? 'Save Changes' : 'Create Property'}
             </button>
           </div>
         </form>
