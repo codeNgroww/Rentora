@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
 import { RentCharge, Payment, Tenant, Property, Unit } from '@rental-saas/contracts';
 import { TimeframeFilter, isDateInRange } from '../../lib/dateFilters';
-import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface RentPaymentsScreenProps {
   charges: RentCharge[];
@@ -78,10 +77,6 @@ export function RentPaymentsScreen({
             Payment Receipts ({filteredPayments.length})
           </button>
         </div>
-
-        {timeframeFilter && onTimeframeChange && (
-          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
-        )}
 
         <button id="record-rent-payment-btn" className="btn btn-primary btn-sm" onClick={onOpenRecordPayment}>
           <Plus size={14} />

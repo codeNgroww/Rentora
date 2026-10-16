@@ -354,10 +354,6 @@ export default function Home() {
           onTimeframeChange={handleTimeframeChange}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
-          onOpenAddExpense={() => {
-            setEditingExpense(null);
-            setIsAddExpenseOpen(true);
-          }}
           notifications={notifications}
           onMarkNotificationRead={handleMarkNotificationRead}
         />

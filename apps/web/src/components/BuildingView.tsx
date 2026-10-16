@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { Property, Unit } from '@rental-saas/contracts';
 import { TimeframeFilter } from '../lib/dateFilters';
-import { TimeframeFilterBar } from './TimeframeFilterBar';
 
 interface BuildingViewProps {
   property: Property;
@@ -125,64 +124,23 @@ export function BuildingView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Timeframe Filter selector */}
-          {timeframeFilter && onTimeframeChange ? (
-            <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} compact />
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '8px',
-                padding: '4px 6px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              }}
-            >
-              <button
-                onClick={onPrevMonth}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  color: '#64748b',
-                  display: 'flex',
-                }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '0 8px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#0f172a',
-                }}
-              >
-                <span>{formatPeriod(period)}</span>
-                <Calendar size={14} color="#64748b" />
-              </div>
-              <button
-                onClick={onNextMonth}
-                style={{
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  color: '#64748b',
-                  display: 'flex',
-                }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
+          <span
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: '#0284c7',
+              background: '#f0f9ff',
+              border: '1px solid #bae6fd',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <Calendar size={13} color="#0284c7" />
+            <span>{timeframeFilter?.label || periodShort}</span>
+          </span>
 
           <button
             className="btn btn-secondary btn-sm"

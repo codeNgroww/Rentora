@@ -13,7 +13,7 @@ interface TopBarProps {
   onTimeframeChange?: (tf: TimeframeFilter) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  onOpenAddExpense: () => void;
+  onOpenAddExpense?: () => void;
   notifications: NotificationItem[];
   onMarkNotificationRead: (id: string) => void;
 }
@@ -163,15 +163,17 @@ export function TopBar({
           )}
         </div>
 
-        {/* Primary Action Button */}
-        <button
-          id="global-add-expense-btn"
-          className="btn btn-primary"
-          onClick={onOpenAddExpense}
-        >
-          <Plus size={16} />
-          <span>Add Expense</span>
-        </button>
+        {/* Optional Action Button */}
+        {onOpenAddExpense && (
+          <button
+            id="global-add-expense-btn"
+            className="btn btn-primary"
+            onClick={onOpenAddExpense}
+          >
+            <Plus size={16} />
+            <span>Add Expense</span>
+          </button>
+        )}
       </div>
     </header>
   );

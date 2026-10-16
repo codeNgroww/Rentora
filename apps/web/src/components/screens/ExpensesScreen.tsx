@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { Expense, ExpenseCategory, Property, Unit } from '@rental-saas/contracts';
 import { TimeframeFilter, isDateInRange } from '../../lib/dateFilters';
-import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface ExpensesScreenProps {
   expenses: Expense[];
@@ -131,24 +130,12 @@ export function ExpensesScreen({
           gap: '12px',
         }}
       >
-        {timeframeFilter && onTimeframeChange ? (
-          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
-        ) : (
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <button
-              className={`btn btn-sm ${viewMode === 'monthly' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setViewMode('monthly')}
-            >
-              Monthly
-            </button>
-            <button
-              className={`btn btn-sm ${viewMode === 'yearly' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setViewMode('yearly')}
-            >
-              Yearly
-            </button>
-          </div>
-        )}
+        <div>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>Expense Records & Outflows</h3>
+          <p style={{ fontSize: '12.5px', color: '#64748b', margin: '2px 0 0 0' }}>
+            Showing operational expenditures for <strong>{timeframeFilter?.label || period}</strong>
+          </p>
+        </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button id="export-expenses-btn" className="btn btn-secondary btn-sm" onClick={onExportCsv}>

@@ -4,7 +4,6 @@ import React from 'react';
 import { Download, FileSpreadsheet, Building2, AlertTriangle } from 'lucide-react';
 import { FinancialReportSummary, RentArrearsItem } from '@rental-saas/contracts';
 import { TimeframeFilter } from '../../lib/dateFilters';
-import { TimeframeFilterBar } from '../TimeframeFilterBar';
 
 interface ReportsScreenProps {
   summary: FinancialReportSummary | null;
@@ -43,9 +42,6 @@ export function ReportsScreen({
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {timeframeFilter && onTimeframeChange && (
-            <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
-          )}
           <button
             id="export-financial-csv-btn"
             className="btn btn-secondary btn-sm"
