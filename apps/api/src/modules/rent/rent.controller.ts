@@ -229,6 +229,9 @@ export class RentController {
       vatAmount?: string;
       totalAmount?: string;
       allocations?: Array<{ rentChargeId: string; amount: string }>;
+      proofUrl?: string;
+      proofName?: string;
+      invoiceNumber?: string;
     }
   ) {
     const effectiveWsId = this.getEffectiveWsId(wsId);
@@ -373,6 +376,9 @@ export class RentController {
       vatAmount: computedVat.toFixed(2),
       totalAmount: finalTotal.toFixed(2),
       allocations: paymentAllocations,
+      proofUrl: body.proofUrl || undefined,
+      proofName: body.proofName || undefined,
+      invoiceNumber: body.invoiceNumber || `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`,
       createdAt: new Date().toISOString(),
     };
 

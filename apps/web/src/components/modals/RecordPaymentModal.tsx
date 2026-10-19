@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tenant, Property, Unit, RentCharge, VatSettings } from '@rental-saas/contracts';
 import { api } from '../../lib/api';
-import { Receipt, Percent } from 'lucide-react';
+import { Receipt, Percent, Paperclip, Upload, X, FileText, CheckCircle2 } from 'lucide-react';
 
 interface RecordPaymentModalProps {
   tenants: Tenant[];
@@ -28,6 +28,9 @@ export function RecordPaymentModal({
   const [paymentMethod, setPaymentMethod] = useState('cheque');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
+  const [proofName, setProofName] = useState<string | null>(null);
+  const [proofSize, setProofSize] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -69,6 +72,31 @@ export function RecordPaymentModal({
   const vatAmount = (baseAmt * activeRate) / 100;
   const totalAmount = baseAmt + vatAmount;
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setErrorMsg('Payment proof file size must be under 8MB.');
+      return;
+    }
+
+    setProofName(file.name);
+    setProofSize(`${(file.size / 1024).toFixed(1)} KB`);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProofUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = () => {
+    setProofUrl(null);
+    setProofName(null);
+    setProofSize(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isNaN(baseAmt) || baseAmt <= 0) {
@@ -91,6 +119,8 @@ export function RecordPaymentModal({
         vatRate: activeRate,
         vatAmount: vatAmount.toFixed(2),
         totalAmount: totalAmount.toFixed(2),
+        proofUrl: proofUrl || undefined,
+        proofName: proofName || undefined,
       });
       onClose();
     } catch (err: any) {
@@ -279,6 +309,123 @@ export function RecordPaymentModal({
                   onChange={(e) => setReference(e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Payment Proof Attachment Card */}
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Paperclip size={14} color="#0284c7" />
+                  <span>Attach Payment Proof (Cheque Copy / Bank Slip / PDF)</span>
+                </span>
+                <span style={{ fontSize: '11px', color: '#64748b' }}>Optional</span>
+              </label>
+
+              {!proofUrl ? (
+                <label
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '2px dashed #cbd5e1',
+                    borderRadius: '8px',
+                    padding: '16px 20px',
+                    backgroundColor: '#f8fafc',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    textAlign: 'center',
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      const input = document.getElementById('payment-proof-file-input') as HTMLInputElement;
+                      if (input) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        input.files = dataTransfer.files;
+                        handleFileChange({ target: input } as any);
+                      }
+                    }
+                  }}
+                >
+                  <input
+                    id="payment-proof-file-input"
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                  <Upload size={22} color="#0284c7" style={{ marginBottom: '6px' }} />
+                  <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#0f172a' }}>
+                    Click to browse or drag & drop proof
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                    Supports PNG, JPG, JPEG, PDF up to 8MB
+                  </div>
+                </label>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    backgroundColor: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {proofUrl.startsWith('data:image/') ? (
+                      <img
+                        src={proofUrl}
+                        alt="Proof preview"
+                        style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #bbf7d0' }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '6px',
+                          backgroundColor: '#dbeafe',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <FileText size={20} color="#0284c7" />
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: '12.5px', fontWeight: 600, color: '#166534' }}>
+                        {proofName}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 size={11} />
+                        <span>Ready to attach ({proofSize})</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    className="btn btn-sm btn-secondary"
+                    style={{ padding: '4px 8px', color: '#dc2626', borderColor: '#fca5a5' }}
+                    title="Remove file"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="form-group" style={{ marginBottom: 0 }}>

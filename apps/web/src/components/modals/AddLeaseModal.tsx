@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { Property, Unit, Tenant, PaymentFrequency, Lease } from '@rental-saas/contracts';
+import { Receipt } from 'lucide-react';
+import { InvoiceModal } from './InvoiceModal';
 
 interface AddLeaseModalProps {
   lease?: Lease | null;
@@ -59,6 +61,7 @@ export function AddLeaseModal({
   const [termsNotes, setTermsNotes] = useState(lease?.termsNotes || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showInvoicePreview, setShowInvoicePreview] = useState(false);
 
   // Helper to generate default cheques based on frequency and dates
   const generateDefaultCheques = (
@@ -211,11 +214,12 @@ export function AddLeaseModal({
         numberOfCheques: Number(numberOfCheques),
         securityDeposit: parseFloat(securityDeposit || '0').toFixed(2),
         termsNotes: termsNotes || null,
-        cheques: cheques.map((c) => ({
+        cheques: cheques.map((c, i) => ({
           chequeNumber: c.chequeNumber || undefined,
           dueDate: c.dueDate,
           amount: parseFloat(c.amount || '0').toFixed(2),
           bankName: c.bankName || undefined,
+          proformaInvoiceNumber: `PI-${startDate.slice(0, 4)}-${String(i + 1).padStart(3, '0')}`,
           notes: `${c.label} ${c.bankName ? `(${c.bankName})` : ''} ${c.chequeNumber ? `CHQ #${c.chequeNumber}` : ''}`.trim(),
         })),
       });
@@ -225,6 +229,32 @@ export function AddLeaseModal({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const previewLease: Lease = {
+    id: lease?.id || 'l-preview',
+    workspaceId: 'w1',
+    propertyId: propertyId || properties[0]?.id || '',
+    unitId: selectedUnitIds[0] || '',
+    unitIds: selectedUnitIds,
+    tenantId,
+    startDate,
+    endDate,
+    annualRent,
+    paymentFrequency,
+    numberOfCheques: Number(numberOfCheques),
+    securityDeposit: securityDeposit || '0.00',
+    status: 'active',
+    cheques: cheques.map((c, i) => ({
+      chequeNumber: c.chequeNumber || `CHQ-${1001 + i}`,
+      dueDate: c.dueDate,
+      amount: parseFloat(c.amount || '0').toFixed(2),
+      bankName: c.bankName || 'Emirates NBD',
+      proformaInvoiceNumber: `PI-${startDate.slice(0, 4)}-${String(i + 1).padStart(3, '0')}`,
+      notes: `${c.label}`,
+    })),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   return (
@@ -536,6 +566,26 @@ export function AddLeaseModal({
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <button
                     type="button"
+                    onClick={() => setShowInvoicePreview(true)}
+                    className="btn btn-secondary btn-sm"
+                    style={{
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      borderColor: '#bae6fd',
+                      color: '#0284c7',
+                      background: '#f0f9ff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontWeight: 600,
+                    }}
+                    title={`Preview ${cheques.length} Proforma Invoices`}
+                  >
+                    <Receipt size={12} color="#0284c7" />
+                    <span>Preview {cheques.length} Invoices</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleResetCheques}
                     className="btn btn-secondary btn-sm"
                     style={{ fontSize: '11px', padding: '3px 8px' }}
@@ -709,6 +759,18 @@ export function AddLeaseModal({
           </div>
         </form>
       </div>
+
+      {showInvoicePreview && (
+        <InvoiceModal
+          mode="proforma"
+          lease={previewLease}
+          tenant={tenants.find((t) => t.id === tenantId)}
+          property={properties.find((p) => p.id === propertyId)}
+          unit={units.find((u) => u.id === selectedUnitIds[0])}
+          units={units}
+          onClose={() => setShowInvoicePreview(false)}
+        />
+      )}
     </div>
   );
 }

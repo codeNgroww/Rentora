@@ -349,8 +349,34 @@ class DemoStore {
       if (method === 'POST') {
         const targetUnitIds =
           body.unitIds && body.unitIds.length > 0 ? body.unitIds : [body.unitId];
+        const numCheques = Number(body.numberOfCheques || (body.cheques ? body.cheques.length : 4));
+        const rentAmt = parseFloat(body.annualRent || '60000.00');
+        const installmentAmt = (rentAmt / numCheques).toFixed(2);
+        const [startYear, startMonth, startDay] = (body.startDate || '2026-10-01').split('-').map(Number);
+        const monthsPerInstallment = Math.round(12 / numCheques);
+        const leaseId = `l-${Date.now()}`;
+
+        // Ensure cheques array exists with proforma invoice numbers
+        const finalCheques = (body.cheques && Array.isArray(body.cheques) && body.cheques.length > 0)
+          ? body.cheques.map((c: any, i: number) => ({
+              ...c,
+              proformaInvoiceNumber: c.proformaInvoiceNumber || `PI-${startYear}-${leaseId.slice(-4)}-${String(i + 1).padStart(2, '0')}`,
+            }))
+          : Array.from({ length: numCheques }).map((_, i) => {
+              const d = new Date(startYear, startMonth - 1 + i * monthsPerInstallment, startDay);
+              const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              return {
+                chequeNumber: `CHQ-${1001 + i}`,
+                dueDate: iso,
+                amount: installmentAmt,
+                bankName: 'Emirates NBD',
+                notes: `Installment ${i + 1} of ${numCheques}`,
+                proformaInvoiceNumber: `PI-${startYear}-${leaseId.slice(-4)}-${String(i + 1).padStart(2, '0')}`,
+              };
+            });
+
         const newLease: Lease = {
-          id: `l-${Date.now()}`,
+          id: leaseId,
           workspaceId: this.state.workspace.id,
           unitId: targetUnitIds[0],
           unitIds: targetUnitIds,
@@ -360,11 +386,11 @@ class DemoStore {
           endDate: body.endDate || '2027-09-30',
           annualRent: body.annualRent || '60000.00',
           paymentFrequency: body.paymentFrequency || 'quarterly',
-          numberOfCheques: body.numberOfCheques || (body.cheques ? body.cheques.length : 4),
+          numberOfCheques: numCheques,
           securityDeposit: body.securityDeposit || '3000.00',
           status: 'active',
           termsNotes: body.termsNotes || '',
-          cheques: body.cheques || [],
+          cheques: finalCheques,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -379,32 +405,33 @@ class DemoStore {
           }
         });
 
-        // Generate Rent Charges from custom cheques if provided
-        if (body.cheques && Array.isArray(body.cheques) && body.cheques.length > 0) {
-          body.cheques.forEach((chq: any, i: number) => {
-            const charge: RentCharge = {
-              id: `rc-${Date.now()}-${i + 1}`,
-              workspaceId: this.state.workspace.id,
-              leaseId: newLease.id,
-              propertyId: newLease.propertyId,
-              unitId: newLease.unitId,
-              tenantId: newLease.tenantId,
-              periodStart: chq.dueDate || newLease.startDate,
-              periodEnd: newLease.endDate,
-              dueDate: chq.dueDate || newLease.startDate,
-              amount: parseFloat(chq.amount || '0').toFixed(2),
-              paidAmount: '0.00',
-              outstandingAmount: parseFloat(chq.amount || '0').toFixed(2),
-              status: 'pending',
-              notes:
-                chq.notes ||
-                `Cheque ${i + 1} of ${body.cheques!.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            };
-            this.state.rentCharges.push(charge);
-          });
-        }
+        // Generate Rent Charges corresponding to each proforma invoice installment
+        finalCheques.forEach((chq: any, i: number) => {
+          const charge: RentCharge = {
+            id: `rc-${Date.now()}-${i + 1}`,
+            workspaceId: this.state.workspace.id,
+            leaseId: newLease.id,
+            propertyId: newLease.propertyId,
+            unitId: newLease.unitId,
+            tenantId: newLease.tenantId,
+            periodStart: chq.dueDate || newLease.startDate,
+            periodEnd: newLease.endDate,
+            dueDate: chq.dueDate || newLease.startDate,
+            amount: parseFloat(chq.amount || '0').toFixed(2),
+            paidAmount: '0.00',
+            outstandingAmount: parseFloat(chq.amount || '0').toFixed(2),
+            status: 'pending',
+            invoiceNumber: chq.proformaInvoiceNumber,
+            installmentIndex: i + 1,
+            installmentTotal: finalCheques.length,
+            notes:
+              chq.notes ||
+              `Cheque ${i + 1} of ${finalCheques.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          this.state.rentCharges.push(charge);
+        });
         this.persist();
         return newLease as unknown as T;
       }
@@ -633,6 +660,7 @@ class DemoStore {
     if (path === '/payments') {
       if (method === 'POST') {
         const amt = parseFloat(body.amount);
+        const invoiceNumber = body.invoiceNumber || `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
         const newPayment: Payment = {
           id: `pay-${Date.now()}`,
           workspaceId: this.state.workspace.id,
@@ -649,6 +677,9 @@ class DemoStore {
           vatRate: body.vatRate || 5.0,
           vatAmount: body.vatAmount || '0.00',
           totalAmount: body.totalAmount || amt.toFixed(2),
+          proofUrl: body.proofUrl || undefined,
+          proofName: body.proofName || undefined,
+          invoiceNumber,
           allocations: [],
           createdAt: new Date().toISOString(),
         };

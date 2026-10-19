@@ -124,6 +124,7 @@ export interface ChequeScheduleItem {
   amount: string;
   bankName?: string;
   notes?: string;
+  proformaInvoiceNumber?: string;
 }
 
 export interface Lease {
@@ -218,6 +219,9 @@ export interface RentCharge {
   outstandingAmount: string; // amount - paidAmount
   status: RentChargeStatus;
   notes?: string;
+  invoiceNumber?: string;
+  installmentIndex?: number;
+  installmentTotal?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -247,6 +251,9 @@ export interface Payment {
   vatAmount?: string; // VAT Dirhams amount
   totalAmount?: string; // Total including VAT
   allocations: PaymentAllocation[];
+  proofUrl?: string; // Data URL or storage URL for attached payment proof
+  proofName?: string; // File name e.g. "cheque_copy_102.pdf"
+  invoiceNumber?: string; // e.g. "INV-2026-0042"
   createdAt: string;
 }
 

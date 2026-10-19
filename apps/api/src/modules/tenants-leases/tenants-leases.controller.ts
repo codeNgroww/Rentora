@@ -253,9 +253,17 @@ export class TenantsLeasesController {
       u.currentTenantName = tenant.fullName;
     });
 
+    const numCheques = body.numberOfCheques || (body.cheques ? body.cheques.length : 4);
+    const startYearStr = newLease.startDate ? newLease.startDate.slice(0, 4) : '2026';
+
     // Generate Rent Charges: Use customized cheques if provided, or calculate installments
     if (body.cheques && Array.isArray(body.cheques) && body.cheques.length > 0) {
-      body.cheques.forEach((chq: any, i: number) => {
+      newLease.cheques = body.cheques.map((c: any, i: number) => ({
+        ...c,
+        proformaInvoiceNumber: c.proformaInvoiceNumber || `PI-${startYearStr}-${newLease.id.slice(-4)}-${String(i + 1).padStart(2, '0')}`,
+      }));
+
+      newLease.cheques.forEach((chq: any, i: number) => {
         const charge: RentCharge = {
           id: `rc-${Date.now()}-${i + 1}`,
           workspaceId: effectiveWsId,
@@ -270,9 +278,12 @@ export class TenantsLeasesController {
           paidAmount: '0.00',
           outstandingAmount: parseFloat(chq.amount || '0').toFixed(2),
           status: 'pending',
+          invoiceNumber: chq.proformaInvoiceNumber,
+          installmentIndex: i + 1,
+          installmentTotal: newLease.cheques!.length,
           notes:
             chq.notes ||
-            `Cheque ${i + 1} of ${body.cheques!.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
+            `Cheque ${i + 1} of ${newLease.cheques!.length} ${chq.bankName ? `(${chq.bankName})` : ''} ${chq.chequeNumber ? `CHQ #${chq.chequeNumber}` : ''}`.trim(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -286,10 +297,21 @@ export class TenantsLeasesController {
       const monthsPerInstallment = Math.round(12 / installments);
 
       const [startYear, startMonth, startDay] = newLease.startDate.split('-').map(Number);
+      const generatedCheques: any[] = [];
 
       for (let i = 0; i < installments; i++) {
         const chargeDate = new Date(startYear, startMonth - 1 + i * monthsPerInstallment, startDay);
         const dueDateStr = chargeDate.toISOString().slice(0, 10);
+        const piNumber = `PI-${startYear}-${newLease.id.slice(-4)}-${String(i + 1).padStart(2, '0')}`;
+
+        generatedCheques.push({
+          chequeNumber: `CHQ-${1001 + i}`,
+          dueDate: dueDateStr,
+          amount: installmentAmt,
+          bankName: 'Emirates NBD',
+          notes: `Installment ${i + 1} of ${installments}`,
+          proformaInvoiceNumber: piNumber,
+        });
 
         const charge: RentCharge = {
           id: `rc-${Date.now()}-${i + 1}`,
@@ -305,12 +327,16 @@ export class TenantsLeasesController {
           paidAmount: '0.00',
           outstandingAmount: installmentAmt,
           status: 'pending',
+          invoiceNumber: piNumber,
+          installmentIndex: i + 1,
+          installmentTotal: installments,
           notes: `Cheque ${i + 1} of ${installments} (Quarterly PDC - Due every 3 months)`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
         this.dataStore.rentCharges.push(charge);
       }
+      newLease.cheques = generatedCheques;
     }
 
     this.dataStore.saveToFile();

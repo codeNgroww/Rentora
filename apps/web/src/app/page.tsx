@@ -310,6 +310,32 @@ export default function Home() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    } else if (type === 'arrears') {
+      let csvContent = 'data:text/csv;charset=utf-8,';
+      csvContent += 'Tenant,Phone,Property,Unit,Due Date,Days Overdue,Total Billed (AED),Outstanding Balance (AED)\n';
+      rentArrears.forEach((a) => {
+        csvContent += `"${a.tenantName}","${a.tenantPhone || ''}","${a.propertyName}","${a.unitNumber}","${a.dueDate}","${a.daysOverdue}","${a.amountDue}","${a.outstandingBalance}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `rent_arrears_${period}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (type === 'financials') {
+      let csvContent = 'data:text/csv;charset=utf-8,';
+      csvContent += 'Property,Occupied Units,Total Units,Rental Income (AED),Operating Expenses (AED),Net Cash Flow (AED)\n';
+      reportSummary?.propertiesSummary.forEach((p) => {
+        csvContent += `"${p.propertyName}","${p.occupiedUnits}","${p.totalUnits}","${p.income}","${p.expenses}","${p.net}"\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `financial_performance_${period}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 

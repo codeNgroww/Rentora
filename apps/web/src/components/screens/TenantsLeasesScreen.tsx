@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, FileText, Plus, Phone, Mail, Calendar, ShieldCheck, Edit2, Trash2 } from 'lucide-react';
+import { Users, FileText, Plus, Phone, Mail, Calendar, ShieldCheck, Edit2, Trash2, Receipt } from 'lucide-react';
 import { Tenant, Lease, Property, Unit } from '@rental-saas/contracts';
 import { TenancyContractModal } from '../modals/TenancyContractModal';
+import { InvoiceModal } from '../modals/InvoiceModal';
 
 interface TenantsLeasesScreenProps {
   tenants: Tenant[];
@@ -32,6 +33,7 @@ export function TenantsLeasesScreen({
 }: TenantsLeasesScreenProps) {
   const [activeTab, setActiveTab] = useState<'leases' | 'tenants'>('leases');
   const [selectedContractLease, setSelectedContractLease] = useState<Lease | null>(null);
+  const [selectedInvoiceLease, setSelectedInvoiceLease] = useState<Lease | null>(null);
 
   const activeContractLease = selectedContractLease || (leases.length > 0 ? leases[0] : null);
   const contractTenant = tenants.find((t) => t.id === activeContractLease?.tenantId);
@@ -207,6 +209,25 @@ export function TenantsLeasesScreen({
                                 <FileText size={13} color="#166534" />
                                 <span>Contract</span>
                               </button>
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  fontSize: '11.5px',
+                                  padding: '5px 8px',
+                                  borderColor: '#bae6fd',
+                                  color: '#0284c7',
+                                  background: '#f0f9ff',
+                                  fontWeight: 600,
+                                }}
+                                onClick={() => setSelectedInvoiceLease(l)}
+                                title={`Generate ${l.numberOfCheques || 4} Proforma Tax Invoices`}
+                              >
+                                <Receipt size={13} color="#0284c7" />
+                                <span>{l.numberOfCheques || 4} Invoices</span>
+                              </button>
                               {onEditLease && (
                                 <button
                                   className="btn btn-secondary btn-sm"
@@ -370,6 +391,19 @@ export function TenantsLeasesScreen({
           property={contractProp}
           unit={contractUnit}
           onClose={() => setSelectedContractLease(null)}
+        />
+      )}
+
+      {/* Proforma Invoices Modal */}
+      {selectedInvoiceLease && (
+        <InvoiceModal
+          mode="proforma"
+          lease={selectedInvoiceLease}
+          tenant={tenants.find((t) => t.id === selectedInvoiceLease.tenantId)}
+          property={properties.find((p) => p.id === selectedInvoiceLease.propertyId)}
+          unit={units.find((u) => u.id === selectedInvoiceLease.unitId)}
+          units={units}
+          onClose={() => setSelectedInvoiceLease(null)}
         />
       )}
     </div>

@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock, Edit2, Trash2 } from 'lucide-react';
+import { CircleDollarSign, Plus, AlertCircle, CheckCircle, Clock, Edit2, Trash2, Receipt, Paperclip } from 'lucide-react';
 import { RentCharge, Payment, Tenant, Property, Unit } from '@rental-saas/contracts';
 import { TimeframeFilter, isDateInRange } from '../../lib/dateFilters';
+import { InvoiceModal } from '../modals/InvoiceModal';
 
 interface RentPaymentsScreenProps {
   charges: RentCharge[];
@@ -35,6 +36,8 @@ export function RentPaymentsScreen({
   onDeletePayment,
 }: RentPaymentsScreenProps) {
   const [activeTab, setActiveTab] = useState<'charges' | 'payments'>('charges');
+  const [selectedProformaCharge, setSelectedProformaCharge] = useState<RentCharge | null>(null);
+  const [selectedPaidPayment, setSelectedPaidPayment] = useState<Payment | null>(null);
 
   const filteredCharges = timeframeFilter
     ? charges.filter((c) => isDateInRange(c.dueDate, timeframeFilter.startDate, timeframeFilter.endDate))
@@ -174,6 +177,19 @@ export function RentPaymentsScreen({
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              style={{
+                                padding: '4px 8px',
+                                color: '#0284c7',
+                                borderColor: '#bae6fd',
+                                background: '#f0f9ff',
+                              }}
+                              title="View Proforma Invoice"
+                              onClick={() => setSelectedProformaCharge(c)}
+                            >
+                              <Receipt size={13} color="#0284c7" />
+                            </button>
                             {onEditCharge && (
                               <button
                                 className="btn btn-secondary btn-sm"
@@ -243,9 +259,30 @@ export function RentPaymentsScreen({
                           {p.paymentMethod.replace('_', ' ')}
                         </td>
                         <td>
-                          <span style={{ fontFamily: 'monospace', fontSize: '12.5px' }}>
-                            {p.reference || 'N/A'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontFamily: 'monospace', fontSize: '12.5px' }}>
+                              {p.reference || 'N/A'}
+                            </span>
+                            {p.proofUrl && (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  fontSize: '10.5px',
+                                  color: '#15803d',
+                                  backgroundColor: '#dcfce7',
+                                  padding: '2px 6px',
+                                  borderRadius: '4px',
+                                  fontWeight: 600,
+                                }}
+                                title={`Proof attached: ${p.proofName || 'Payment receipt'}`}
+                              >
+                                <Paperclip size={10} />
+                                <span>Proof</span>
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <div style={{ fontWeight: 700, color: '#15803d' }}>
@@ -262,6 +299,19 @@ export function RentPaymentsScreen({
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                            <button
+                              className="btn btn-secondary btn-sm"
+                              style={{
+                                padding: '4px 8px',
+                                color: '#166534',
+                                borderColor: '#bbf7d0',
+                                background: '#f0fdf4',
+                              }}
+                              title="View Official Tax Invoice with PAID Seal"
+                              onClick={() => setSelectedPaidPayment(p)}
+                            >
+                              <Receipt size={13} color="#166534" />
+                            </button>
                             {onEditPayment && (
                               <button
                                 className="btn btn-secondary btn-sm"
@@ -296,6 +346,33 @@ export function RentPaymentsScreen({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Proforma Invoice Modal for Charge */}
+      {selectedProformaCharge && (
+        <InvoiceModal
+          mode="proforma"
+          charge={selectedProformaCharge}
+          tenant={tenants.find((t) => t.id === selectedProformaCharge.tenantId)}
+          property={properties.find((p) => p.id === selectedProformaCharge.propertyId)}
+          unit={units.find((u) => u.id === selectedProformaCharge.unitId)}
+          units={units}
+          installmentIndex={selectedProformaCharge.installmentIndex || 1}
+          onClose={() => setSelectedProformaCharge(null)}
+        />
+      )}
+
+      {/* Paid Invoice & Official Receipt Modal */}
+      {selectedPaidPayment && (
+        <InvoiceModal
+          mode="paid"
+          payment={selectedPaidPayment}
+          tenant={tenants.find((t) => t.id === selectedPaidPayment.tenantId)}
+          property={properties.find((p) => p.id === selectedPaidPayment.propertyId)}
+          unit={units.find((u) => u.id === selectedPaidPayment.unitId)}
+          units={units}
+          onClose={() => setSelectedPaidPayment(null)}
+        />
       )}
     </div>
   );
