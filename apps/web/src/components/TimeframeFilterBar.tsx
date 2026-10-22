@@ -73,21 +73,9 @@ export function TimeframeFilterBar({
   };
 
   return (
-    <div
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        background: '#ffffff',
-        border: '1px solid #cbd5e1',
-        borderRadius: '10px',
-        padding: '3px 6px',
-        gap: '8px',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-        flexWrap: 'wrap',
-      }}
-    >
+    <div className="timeframe-filter-bar-container">
       {/* Mode Buttons */}
-      <div style={{ display: 'flex', gap: '3px', background: '#f1f5f9', padding: '2px', borderRadius: '7px' }}>
+      <div className="timeframe-mode-buttons" style={{ display: 'flex', gap: '3px', background: '#f1f5f9', padding: '2px', borderRadius: '7px' }}>
         <button
           type="button"
           className={`btn btn-sm ${mode === 'monthly' ? 'btn-primary' : ''}`}
@@ -199,7 +187,7 @@ export function TimeframeFilterBar({
         </div>
       ) : (
         /* Custom Date Range Inputs */
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div className="timeframe-custom-dates">
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>From:</span>
             <input

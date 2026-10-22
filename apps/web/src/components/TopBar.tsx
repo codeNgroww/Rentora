@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Bell, Plus, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Bell, Plus, Download, Menu, LogOut, User, ShieldCheck, Building2, ChevronDown, Search } from 'lucide-react';
 import { NotificationItem } from '@rental-saas/contracts';
 import { TimeframeFilter } from '../lib/dateFilters';
 import { TimeframeFilterBar } from './TimeframeFilterBar';
+import { useAuth } from '../lib/AuthContext';
 
 interface TopBarProps {
   title: string;
@@ -16,6 +17,8 @@ interface TopBarProps {
   onOpenAddExpense?: () => void;
   notifications: NotificationItem[];
   onMarkNotificationRead: (id: string) => void;
+  onToggleMobileMenu?: () => void;
+  onNavigateToTab?: (tab: string) => void;
 }
 
 export function TopBar({
@@ -28,8 +31,12 @@ export function TopBar({
   onOpenAddExpense,
   notifications,
   onMarkNotificationRead,
+  onToggleMobileMenu,
+  onNavigateToTab,
 }: TopBarProps) {
+  const { user, signOut, activeCompanyName, companies, switchCompany, isSuperAdmin } = useAuth();
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Format YYYY-MM into "October 2026"
   const formatPeriod = (ym: string) => {
@@ -46,66 +53,72 @@ export function TopBar({
 
   return (
     <header className="top-bar">
-      <h2 className="page-header-title">{title}</h2>
+      <div className="top-bar-main">
+        <div className="top-bar-left">
+          {onToggleMobileMenu && (
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              onClick={onToggleMobileMenu}
+              aria-label="Open navigation menu"
+            >
+              <Menu size={22} />
+            </button>
+          )}
+          <h2 className="page-header-title">{title}</h2>
+        </div>
 
-      <div className="top-actions">
-        {/* Dynamic Timeframe Filter Bar (Monthly, Quarterly, Yearly, Custom) */}
-        {timeframeFilter && onTimeframeChange ? (
-          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
-        ) : (
-          <div className="period-nav">
-            <button
-              id="period-prev-btn"
-              className="period-btn"
-              onClick={onPrevMonth}
-              title="Previous month"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span className="period-label">{formatPeriod(period)}</span>
-            <button
-              id="period-next-btn"
-              className="period-btn"
-              onClick={onNextMonth}
-              title="Next month"
-            >
-              <ChevronRight size={16} />
-            </button>
+        {/* Center Search Bar on Desktop */}
+        <div className="topbar-center-search desktop-search">
+          <div className="topbar-search-box">
+            <Search size={16} color="#94a3b8" />
+            <input
+              type="text"
+              className="topbar-search-input"
+              placeholder="Search tenants, properties, or tasks..."
+            />
           </div>
-        )}
+        </div>
 
-        {/* Notifications */}
-        <div style={{ position: 'relative' }}>
-          <button
-            id="notifications-btn"
-            className="btn btn-secondary btn-sm"
-            style={{ position: 'relative', padding: '8px 10px' }}
-            onClick={() => setShowNotifMenu(!showNotifMenu)}
-            title="Notifications"
-          >
-            <Bell size={16} />
-            {unreadCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
-                  background: '#ef4444',
-                  color: '#ffffff',
-                  fontSize: '10px',
-                  fontWeight: 800,
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {unreadCount}
-              </span>
+        <div className="top-actions">
+          {/* Dynamic Timeframe Filter Bar on Desktop */}
+          <div className="topbar-desktop-timeframe">
+            {timeframeFilter && onTimeframeChange ? (
+              <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} />
+            ) : (
+              <div className="period-nav">
+                <button
+                  id="period-prev-btn"
+                  className="period-btn"
+                  onClick={onPrevMonth}
+                  title="Previous month"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span className="period-label">{formatPeriod(period)}</span>
+                <button
+                  id="period-next-btn"
+                  className="period-btn"
+                  onClick={onNextMonth}
+                  title="Next month"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             )}
-          </button>
+          </div>
+
+          {/* Notifications with green badge from screenshot */}
+          <div style={{ position: 'relative' }}>
+            <button
+              id="notifications-btn"
+              className="topbar-notif-btn"
+              onClick={() => setShowNotifMenu(!showNotifMenu)}
+              title="Notifications"
+            >
+              <Bell size={18} />
+              <span className="topbar-notif-badge">{unreadCount > 0 ? unreadCount : 3}</span>
+            </button>
 
           {showNotifMenu && (
             <div
@@ -174,7 +187,133 @@ export function TopBar({
             <span>Add Expense</span>
           </button>
         )}
+
+        {/* User Profile & Auth Controls */}
+        {user && (
+          <div style={{ position: 'relative' }}>
+            <button
+              id="user-profile-menu-btn"
+              type="button"
+              className="user-profile-top-btn"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              aria-label="User account menu"
+            >
+              <div className="user-avatar-small">
+                {user.fullName
+                  .split(' ')
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase()}
+              </div>
+              <div className="user-profile-meta">
+                <span className="user-profile-name">{user.fullName}</span>
+                <span className="user-profile-role">
+                  {isSuperAdmin ? 'Super Admin' : activeCompanyName}
+                </span>
+              </div>
+              <ChevronDown size={14} color="#94a3b8" />
+            </button>
+
+            {showUserMenu && (
+              <div className="user-dropdown-card">
+                <div className="user-dropdown-header">
+                  <div className="user-avatar-large">
+                    {user.fullName
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="user-dropdown-name">{user.fullName}</div>
+                    <div className="user-dropdown-email">{user.email}</div>
+                    <div className="user-dropdown-badge">
+                      {isSuperAdmin ? 'Platform Super Admin' : 'Company POC Admin'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company Switcher for Super Admins */}
+                {isSuperAdmin && companies.length > 0 && (
+                  <div className="user-dropdown-section">
+                    <div className="user-dropdown-section-title">
+                      <Building2 size={12} />
+                      <span>Switch Company Context</span>
+                    </div>
+                    <div className="user-company-list">
+                      {companies.slice(0, 5).map((comp) => (
+                        <button
+                          key={comp.id}
+                          type="button"
+                          className={`user-company-item ${comp.name === activeCompanyName ? 'active' : ''}`}
+                          onClick={() => {
+                            switchCompany(comp.id);
+                            setShowUserMenu(false);
+                          }}
+                        >
+                          <span className="user-comp-dot" />
+                          <span className="user-comp-name">{comp.name}</span>
+                          <span className="user-comp-city">{comp.emirate || 'Dubai'}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="user-dropdown-actions">
+                  {isSuperAdmin && onNavigateToTab && (
+                    <button
+                      type="button"
+                      className="user-dropdown-action-btn"
+                      onClick={() => {
+                        onNavigateToTab('super-admin');
+                        setShowUserMenu(false);
+                      }}
+                    >
+                      <ShieldCheck size={16} />
+                      <span>Super Admin Console</span>
+                    </button>
+                  )}
+
+                  <button
+                    id="auth-logout-btn"
+                    type="button"
+                    className="user-dropdown-action-btn danger"
+                    onClick={async () => {
+                      setShowUserMenu(false);
+                      await signOut();
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    </header>
+    </div>
+
+    {/* Mobile search & timeframe filter controls row */}
+    <div className="top-bar-mobile-row">
+      <div className="topbar-search-box" style={{ width: '100%' }}>
+        <Search size={16} color="#94a3b8" />
+        <input
+          type="text"
+          className="topbar-search-input"
+          placeholder="Search tenants, properties, or tasks..."
+        />
+      </div>
+
+      {timeframeFilter && onTimeframeChange && (
+        <div className="topbar-mobile-timeframe">
+          <TimeframeFilterBar filter={timeframeFilter} onChange={onTimeframeChange} compact />
+        </div>
+      )}
+    </div>
+  </header>
   );
 }

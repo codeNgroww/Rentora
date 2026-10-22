@@ -13,12 +13,13 @@ test('Rental SaaS Financial & Business Logic Test Suite', async (t) => {
   let rentController: RentController;
   let leasesController: TenantsLeasesController;
   let dashboardController: DashboardController;
-
-  const wsId = 'w1111111-1111-4111-8111-111111111111';
+  let wsId = 'c1111111-1111-4111-8111-111111111111';
 
   t.beforeEach(() => {
+    process.env.DATA_DIR = `/tmp/rentora-test-${Date.now()}-${Math.random()}`;
     dataStore = new DataStoreService();
     dataStore.onModuleInit();
+    wsId = dataStore.companies[0]?.id || dataStore.workspaces[0]?.id || 'c1111111-1111-4111-8111-111111111111';
     expensesController = new ExpensesController(dataStore);
     rentController = new RentController(dataStore);
     leasesController = new TenantsLeasesController(dataStore);
@@ -76,9 +77,7 @@ test('Rental SaaS Financial & Business Logic Test Suite', async (t) => {
           annualRent: '90000.00',
         });
       },
-      {
-        message: 'This unit already has an active lease for overlapping dates.',
-      }
+      /already has an active lease for overlapping dates/i
     );
   });
 

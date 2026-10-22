@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Shield, Globe, Users, Building, Receipt, CheckCircle2, Percent, HelpCircle } from 'lucide-react';
 import { api } from '../../lib/api';
+import { useAuth } from '../../lib/AuthContext';
 
 export function SettingsScreen() {
+  const { user, activeCompanyName } = useAuth();
   const [vatEnabled, setVatEnabled] = useState(true);
   const [vatRate, setVatRate] = useState<number>(5.0);
-  const [trn, setTrn] = useState('100293849500003');
+  const [trn, setTrn] = useState('');
   const [calculationMode, setCalculationMode] = useState<'exclusive' | 'inclusive'>('exclusive');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,7 +23,7 @@ export function SettingsScreen() {
         if (data?.vatSettings) {
           setVatEnabled(data.vatSettings.enabled ?? true);
           setVatRate(data.vatSettings.defaultRate !== undefined ? Number(data.vatSettings.defaultRate) : 5.0);
-          setTrn(data.vatSettings.trn || '100293849500003');
+          setTrn(data.vatSettings.trn || '');
           setCalculationMode(data.vatSettings.calculationMode || 'exclusive');
         }
       } catch (err) {
@@ -258,7 +260,7 @@ export function SettingsScreen() {
           <div className="card-body">
             <div className="form-group">
               <label className="form-label">Organization Name</label>
-              <input type="text" className="form-control" readOnly value="Al Reem Properties LLC" />
+              <input type="text" className="form-control" readOnly value={activeCompanyName || 'Rentora'} />
             </div>
             <div className="form-row">
               <div className="form-group">
@@ -296,46 +298,12 @@ export function SettingsScreen() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px' }}>Sultan Al Nuaimi</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>sultan@alreem.ae</div>
+                  <div style={{ fontWeight: 700, fontSize: '13.5px' }}>{user?.fullName || 'Active Administrator'}</div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>{user?.email || 'admin@rentora.ae'}</div>
                 </div>
-                <span className="badge badge-green">Owner</span>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 14px',
-                  background: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px' }}>Rami Khoury</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>rami@alreem.ae</div>
-                </div>
-                <span className="badge badge-blue">Property Manager</span>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '10px 14px',
-                  background: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: '13.5px' }}>Fatima Zahra</div>
-                  <div style={{ fontSize: '12px', color: '#64748b' }}>fatima@alreem.ae</div>
-                </div>
-                <span className="badge badge-purple">Accountant</span>
+                <span className={`badge ${user?.role === 'super_admin' ? 'badge-purple' : 'badge-green'}`}>
+                  {user?.role ? user.role.toUpperCase().replace('_', ' ') : 'ADMIN'}
+                </span>
               </div>
             </div>
           </div>

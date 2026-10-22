@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Plus, MapPin, Home, Key, Layers, Grid, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Building2, Plus, MapPin, Home, Key, Layers, Grid, Eye, Edit2, Trash2, Car, Store } from 'lucide-react';
 import { Property, Unit } from '@rental-saas/contracts';
 import { BuildingView } from '../BuildingView';
 import { TimeframeFilter } from '../../lib/dateFilters';
@@ -335,8 +335,27 @@ export function PropertiesScreen({
                           </td>
                           <td>{u.floor || 'Ground'}</td>
                           <td>
-                            {u.type === 'commercial' || u.isShop ? (
-                              <span className="badge badge-blue" style={{ fontSize: '11px' }}>
+                            {u.type === 'parking' ? (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  background: '#f1f5f9',
+                                  color: '#475569',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #cbd5e1',
+                                }}
+                              >
+                                <Car size={12} />
+                                Parking
+                              </span>
+                            ) : u.type === 'commercial' || u.isShop ? (
+                              <span className="badge badge-blue" style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <Store size={12} />
                                 Commercial
                               </span>
                             ) : (

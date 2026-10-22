@@ -11,6 +11,8 @@ import { RentPaymentsScreen } from '../components/screens/RentPaymentsScreen';
 import { ReportsScreen } from '../components/screens/ReportsScreen';
 import { AuditScreen } from '../components/screens/AuditScreen';
 import { SettingsScreen } from '../components/screens/SettingsScreen';
+import { SuperAdminScreen } from '../components/screens/SuperAdminScreen';
+import { BottomNav } from '../components/BottomNav';
 
 import { AddExpenseModal } from '../components/modals/AddExpenseModal';
 import { AddPropertyModal } from '../components/modals/AddPropertyModal';
@@ -38,11 +40,17 @@ import {
 } from '@rental-saas/contracts';
 import { TimeframeFilter, getMonthlyRange } from '../lib/dateFilters';
 
-export default function Home() {
+import { AuthScreen } from '../components/screens/AuthScreen';
+import { AuthProvider, useAuth } from '../lib/AuthContext';
+import { RentoraLogo } from '../components/RentoraLogo';
+
+function AppContent() {
+  const { isAuthenticated, isLoading: isAuthLoading, activeCompanyId, activeCompanyName, isSuperAdmin } = useAuth();
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [period, setPeriod] = useState<string>('2026-10');
   const [timeframeFilter, setTimeframeFilter] = useState<TimeframeFilter>(getMonthlyRange(2026, 10));
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Data states
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null);
@@ -115,7 +123,7 @@ export default function Home() {
         api.getFinancialSummary(from, to).catch(() => null),
         api.getRentArrears().catch(() => []),
         api.getNotifications().catch(() => []),
-        api.getAuditLogs().catch(() => []),
+        api.getActivityLogs().catch(() => api.getAuditLogs()).catch(() => []),
       ]);
 
       if (dashData) setDashboardSummary(dashData);
@@ -140,8 +148,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadData(timeframeFilter);
-  }, [timeframeFilter]);
+    if (isAuthenticated) {
+      loadData(timeframeFilter);
+    }
+  }, [timeframeFilter, activeCompanyId, isAuthenticated]);
+
+  useEffect(() => {
+    if (isSuperAdmin && currentTab !== 'super-admin' && currentTab !== 'audit') {
+      setCurrentTab('super-admin');
+    }
+  }, [isSuperAdmin, currentTab]);
 
   const handleTimeframeChange = (tf: TimeframeFilter) => {
     setTimeframeFilter(tf);
@@ -191,7 +207,26 @@ export default function Home() {
 
   // Property Actions
   const handleAddProperty = async (data: any) => {
-    await api.createProperty(data);
+    const { generatedUnits, numberOfFloors, unitsPerFloor, ...propertyPayload } = data;
+    const createdProperty = await api.createProperty(propertyPayload);
+
+    if (createdProperty?.id && generatedUnits && generatedUnits.length > 0) {
+      await Promise.all(
+        generatedUnits.map((u: any) =>
+          api.createUnit(createdProperty.id, {
+            unitNumber: u.unitNumber,
+            type: u.type,
+            isShop: u.type === 'commercial',
+            floor: u.floor,
+            bedrooms: u.type === 'residential' ? (u.bedrooms ?? 1) : 0,
+            bathrooms: u.type === 'residential' ? (u.bathrooms ?? 1) : 0,
+            squareFeet: u.squareFeet || (u.type === 'parking' ? 150 : u.type === 'commercial' ? 600 : 850),
+            marketRent: u.marketRent || (u.type === 'parking' ? '500.00' : '5000.00'),
+            status: 'vacant',
+          })
+        )
+      );
+    }
     await loadData();
   };
 
@@ -354,21 +389,43 @@ export default function Home() {
       case 'reports':
         return 'Financial Reports';
       case 'audit':
-        return 'Audit Logs';
+        return 'Activity Logs (Audit Trail)';
+      case 'super-admin':
+        return 'Super Admin Company Management';
       case 'settings':
-        return 'Workspace Administration';
+        return 'Company Administration';
       default:
         return 'Rental Manager';
     }
   };
 
+  if (isAuthLoading) {
+    return (
+      <div className="auth-loading-screen">
+        <RentoraLogo size={52} showText={true} textSize={26} variant="light" />
+        <div className="auth-spinner" style={{ width: '28px', height: '28px', borderWidth: '3px' }} />
+        <span style={{ fontSize: '13px', color: '#94a3b8' }}>Validating secure session...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <AuthScreen />;
+  }
+
   return (
     <div className="app-container">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation (with Mobile Drawer Support) */}
       <Sidebar
         currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        onSelectTab={(tab) => {
+          setCurrentTab(tab);
+          setIsMobileMenuOpen(false);
+        }}
         arrearsCount={rentArrears.length}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        companyName={activeCompanyName}
       />
 
       {/* Main Wrapper */}
@@ -382,6 +439,8 @@ export default function Home() {
           onNextMonth={handleNextMonth}
           notifications={notifications}
           onMarkNotificationRead={handleMarkNotificationRead}
+          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onNavigateToTab={setCurrentTab}
         />
 
         <main className="content-body">
@@ -405,6 +464,7 @@ export default function Home() {
                   properties={properties}
                   units={units}
                   period={period}
+                  revenueCollected={parseFloat(dashboardSummary?.rentCollected || '0')}
                   timeframeFilter={timeframeFilter}
                   onTimeframeChange={handleTimeframeChange}
                   onOpenAddModal={() => {
@@ -508,10 +568,28 @@ export default function Home() {
               )}
 
               {currentTab === 'settings' && <SettingsScreen />}
+
+              {currentTab === 'super-admin' && (
+                <SuperAdminScreen
+                  onCompanySelect={() => {
+                    loadData();
+                  }}
+                />
+              )}
             </>
           )}
         </main>
       </div>
+
+      {/* Mobile-Friendly Fixed Bottom Navigation Bar */}
+      <BottomNav
+        currentTab={currentTab}
+        onSelectTab={(tab) => {
+          setCurrentTab(tab);
+          setIsMobileMenuOpen(false);
+        }}
+        arrearsCount={rentArrears.length}
+      />
 
       {/* Interactive Modals */}
       {(isAddExpenseOpen || editingExpense) && (
@@ -621,6 +699,7 @@ export default function Home() {
         />
       )}
 
+      {/* Single Record Payment Modal */}
       {isRecordPaymentOpen && (
         <RecordPaymentModal
           tenants={tenants}
@@ -632,5 +711,13 @@ export default function Home() {
         />
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

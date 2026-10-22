@@ -47,7 +47,7 @@ interface DemoStoreState {
   auditLogs: AuditLogItem[];
 }
 
-const STORAGE_KEY = 'rentora_demo_store_v1';
+const STORAGE_KEY = 'rentora_store_live_v2';
 
 class DemoStore {
   private state: DemoStoreState;
@@ -59,6 +59,7 @@ class DemoStore {
   private loadFromStorage(): DemoStoreState {
     if (typeof window !== 'undefined') {
       try {
+        localStorage.removeItem('rentora_demo_store_v1');
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           return JSON.parse(raw);
@@ -186,7 +187,17 @@ class DemoStore {
         this.persist();
         return newProp as unknown as T;
       }
-      return this.state.properties as unknown as T;
+      const enriched = this.state.properties.map((p) => {
+        const pUnits = this.state.units.filter((u) => u.propertyId === p.id);
+        const occupied = pUnits.filter((u) => u.status === 'occupied').length;
+        return {
+          ...p,
+          totalUnits: pUnits.length,
+          occupiedUnits: occupied,
+          vacantUnits: pUnits.length - occupied,
+        };
+      });
+      return enriched as unknown as T;
     }
 
     if (path.startsWith('/properties/') && !path.includes('/units')) {
@@ -247,19 +258,20 @@ class DemoStore {
     if (path.includes('/properties/') && path.endsWith('/units') && method === 'POST') {
       const propId = path.split('/')[2];
       const isCommercial = body.type === 'commercial' || body.isShop === true;
+      const isParking = body.type === 'parking';
       const newUnit: Unit = {
-        id: `u-${Date.now()}`,
+        id: `u-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         workspaceId: this.state.workspace.id,
         propertyId: propId,
         unitNumber: body.unitNumber || '101',
         type: body.type || (body.isShop ? 'commercial' : 'residential'),
         isShop: isCommercial,
         floor: body.floor || '1st Floor',
-        bedrooms: isCommercial ? 0 : (body.bedrooms ?? 1),
-        bathrooms: isCommercial ? 0 : (body.bathrooms ?? 1),
-        squareFeet: body.squareFeet || 800,
-        marketRent: body.marketRent || '5000.00',
-        status: 'vacant',
+        bedrooms: isCommercial || isParking ? 0 : (body.bedrooms ?? 1),
+        bathrooms: isCommercial || isParking ? 0 : (body.bathrooms ?? 1),
+        squareFeet: body.squareFeet || (isParking ? 150 : isCommercial ? 600 : 800),
+        marketRent: body.marketRent || (isParking ? '500.00' : '5000.00'),
+        status: body.status || 'vacant',
         paymentStatus: 'vacant',
         paidAmount: '0.00',
         dueAmount: '0.00',
@@ -778,34 +790,43 @@ class DemoStore {
       const totalExpensesNum = propertiesSummary.reduce((sum, p) => sum + parseFloat(p.expenses), 0);
       const netCashFlowNum = totalIncomeNum - totalExpensesNum;
 
+      const arrearsTotalNum = this.state.rentCharges
+        .filter((c) => c.status === 'overdue' || (c.status === 'partially_paid' && parseFloat(c.outstandingAmount || '0') > 0))
+        .reduce((sum, c) => sum + parseFloat(c.outstandingAmount || '0'), 0);
+
       const rep: FinancialReportSummary = {
         periodLabel: from && to ? `${from} to ${to}` : 'October 2026',
         currency: 'AED',
         totalIncome: totalIncomeNum.toFixed(2),
         totalExpenses: totalExpensesNum.toFixed(2),
         netCashFlow: netCashFlowNum.toFixed(2),
-        rentArrearsTotal: '36250.00',
+        rentArrearsTotal: arrearsTotalNum.toFixed(2),
         propertiesSummary,
       };
       return rep as unknown as T;
     }
 
     if (path === '/reports/rent-arrears') {
-      const arrears: RentArrearsItem[] = [
-        {
-          rentChargeId: 'rc3',
-          propertyId: 'p2',
-          propertyName: 'Downtown Luxury Heights',
-          unitNumber: '2001',
-          tenantName: 'Elena Rostova',
-          tenantPhone: '+971 56 772 1993',
-          dueDate: '2026-08-01',
-          amountDue: '36250.00',
-          amountPaid: '0.00',
-          outstandingBalance: '36250.00',
-          daysOverdue: 75,
-        },
-      ];
+      const arrears: RentArrearsItem[] = this.state.rentCharges
+        .filter((c) => c.status === 'overdue' || (c.status === 'partially_paid' && parseFloat(c.outstandingAmount || '0') > 0))
+        .map((c) => {
+          const prop = this.state.properties.find((p) => p.id === c.propertyId);
+          const tenant = this.state.tenants.find((t) => t.id === c.tenantId);
+          const unit = this.state.units.find((u) => u.id === c.unitId);
+          return {
+            rentChargeId: c.id,
+            propertyId: c.propertyId,
+            propertyName: prop?.name || 'Property',
+            unitNumber: unit?.unitNumber || '',
+            tenantName: tenant?.fullName || 'Tenant',
+            tenantPhone: tenant?.phoneNumber || '',
+            dueDate: c.dueDate,
+            amountDue: c.amount,
+            amountPaid: c.paidAmount,
+            outstandingBalance: c.outstandingAmount,
+            daysOverdue: 0,
+          };
+        });
       return arrears as unknown as T;
     }
 

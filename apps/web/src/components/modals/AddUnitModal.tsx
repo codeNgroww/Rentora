@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Unit } from '@rental-saas/contracts';
+import { Unit, UnitType } from '@rental-saas/contracts';
 
 interface AddUnitModalProps {
   propertyId: string;
@@ -18,7 +18,7 @@ export function AddUnitModal({
   onClose,
   onSubmit,
 }: AddUnitModalProps) {
-  const [unitType, setUnitType] = useState<'residential' | 'commercial'>(
+  const [unitType, setUnitType] = useState<UnitType>(
     unit?.type || (unit?.isShop ? 'commercial' : 'residential')
   );
   const [unitNumber, setUnitNumber] = useState(unit?.unitNumber || '');
@@ -46,8 +46,8 @@ export function AddUnitModal({
         type: unitType,
         isShop: unitType === 'commercial',
         floor: floor || null,
-        bedrooms: unitType === 'commercial' ? 0 : Number(bedrooms),
-        bathrooms: unitType === 'commercial' ? 0 : Number(bathrooms),
+        bedrooms: (unitType === 'commercial' || unitType === 'parking') ? 0 : Number(bedrooms),
+        bathrooms: (unitType === 'commercial' || unitType === 'parking') ? 0 : Number(bathrooms),
         squareFeet: squareFeet ? parseFloat(squareFeet) : null,
         marketRent: rentNum.toFixed(2),
         status,
@@ -93,19 +93,20 @@ export function AddUnitModal({
             {/* Unit Type Selection */}
             <div className="form-group">
               <label className="form-label">Unit Type *</label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                 <label
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 12px',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 10px',
                     borderRadius: '8px',
                     border: unitType === 'residential' ? '2px solid #0284c7' : '1px solid #cbd5e1',
                     background: unitType === 'residential' ? '#f0f9ff' : '#ffffff',
                     cursor: 'pointer',
                     fontWeight: 600,
-                    fontSize: '12.5px',
+                    fontSize: '12px',
                     color: unitType === 'residential' ? '#0369a1' : '#475569',
                   }}
                 >
@@ -124,14 +125,15 @@ export function AddUnitModal({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '8px 12px',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 10px',
                     borderRadius: '8px',
                     border: unitType === 'commercial' ? '2px solid #0284c7' : '1px solid #cbd5e1',
                     background: unitType === 'commercial' ? '#f0f9ff' : '#ffffff',
                     cursor: 'pointer',
                     fontWeight: 600,
-                    fontSize: '12.5px',
+                    fontSize: '12px',
                     color: unitType === 'commercial' ? '#0369a1' : '#475569',
                   }}
                 >
@@ -145,6 +147,33 @@ export function AddUnitModal({
                   />
                   <span>Commercial</span>
                 </label>
+
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: unitType === 'parking' ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                    background: unitType === 'parking' ? '#f0f9ff' : '#ffffff',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    color: unitType === 'parking' ? '#0369a1' : '#475569',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="unitType"
+                    value="parking"
+                    checked={unitType === 'parking'}
+                    onChange={() => setUnitType('parking')}
+                    style={{ accentColor: '#0284c7' }}
+                  />
+                  <span>Parking</span>
+                </label>
               </div>
             </div>
 
@@ -154,7 +183,13 @@ export function AddUnitModal({
                 <input
                   type="text"
                   className="form-control"
-                  placeholder={unitType === 'commercial' ? 'e.g. Shop 1, Office 204' : 'e.g. 101, 2004, Villa 12'}
+                  placeholder={
+                    unitType === 'parking'
+                      ? 'e.g. P-01, Bay 12, P-101'
+                      : unitType === 'commercial'
+                      ? 'e.g. Shop 1, Office 204'
+                      : 'e.g. 101, 2004, Villa 12'
+                  }
                   value={unitNumber}
                   onChange={(e) => setUnitNumber(e.target.value)}
                   required

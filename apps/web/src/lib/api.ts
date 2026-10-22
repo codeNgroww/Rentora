@@ -1,4 +1,8 @@
 import {
+  Company,
+  CreateCompanyDto,
+  UpdateCompanyDto,
+  ActivityLogItem,
   Workspace,
   Property,
   Unit,
@@ -15,6 +19,11 @@ import {
   NotificationItem,
   AuditLogItem,
   VatSettings,
+  AuthUser,
+  AuthResponse,
+  LoginCredentials,
+  CompanyUser,
+  UserRole,
 } from '@rental-saas/contracts';
 
 import { clientDemoStore } from './demoStore';
@@ -22,14 +31,31 @@ import { clientDemoStore } from './demoStore';
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   (typeof window !== 'undefined' ? '/api/v1' : 'http://localhost:4000/api/v1');
-const WORKSPACE_ID = 'w1111111-1111-4111-8111-111111111111';
+
+let currentCompanyId = 'c1111111-1111-4111-8111-111111111111';
+let currentToken: string | null = null;
+let currentUserId: string | null = null;
+
+export function setApiAuth(token: string | null, companyId?: string | null, userId?: string | null) {
+  currentToken = token;
+  if (companyId) currentCompanyId = companyId;
+  if (userId) currentUserId = userId;
+}
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'x-workspace-id': WORKSPACE_ID,
-    ...options.headers,
+    'x-company-id': currentCompanyId,
+    'x-workspace-id': currentCompanyId,
+    ...(options.headers as Record<string, string>),
   };
+
+  if (currentToken) {
+    headers['Authorization'] = `Bearer ${currentToken}`;
+  }
+  if (currentUserId) {
+    headers['x-user-id'] = currentUserId;
+  }
 
   try {
     const res = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -45,7 +71,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     const json = await res.json();
     return json.data;
   } catch (error) {
-    // If backend is unreachable or returns error (e.g. on Netlify demo deployment),
+    // If backend is unreachable or returns error (e.g. on demo preview),
     // gracefully serve from client-side DemoStore so demo works 100% out-of-the-box!
     try {
       const demoResult = clientDemoStore.handle<T>(endpoint, options);
@@ -295,5 +321,91 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(settings),
     }),
+
+  // Super Admin Companies
+  getSuperAdminCompanies: () => request<Company[]>('/super-admin/companies'),
+  createCompany: (data: CreateCompanyDto) =>
+    request<Company>('/super-admin/companies', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCompany: (id: string, data: UpdateCompanyDto) =>
+    request<Company>(`/super-admin/companies/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteCompany: (id: string) =>
+    request<{ success: boolean; message: string }>(`/super-admin/companies/${id}`, {
+      method: 'DELETE',
+    }),
+  resetCompanyPassword: (id: string, newPassword?: string) =>
+    request<{ success: boolean; message: string; newPassword?: string }>(
+      `/super-admin/companies/${id}/reset-password`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ newPassword }),
+      }
+    ),
+  getCompanyUsers: (companyId: string) =>
+    request<CompanyUser[]>(`/super-admin/companies/${companyId}/users`),
+  createCompanyUser: (
+    companyId: string,
+    data: { userName: string; userEmail: string; role: UserRole; phone?: string; password?: string }
+  ) =>
+    request<CompanyUser>(`/super-admin/companies/${companyId}/users`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateCompanyUserRole: (companyId: string, userId: string, role: UserRole) =>
+    request<CompanyUser>(`/super-admin/companies/${companyId}/users/${userId}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify({ role }),
+    }),
+  deleteCompanyUser: (companyId: string, userId: string) =>
+    request<{ success: boolean; message: string }>(
+      `/super-admin/companies/${companyId}/users/${userId}`,
+      {
+        method: 'DELETE',
+      }
+    ),
+
+  // Activity Logs (Universal Audit Plugin)
+  getActivityLogs: (params?: {
+    propertyId?: string;
+    collection?: string;
+    action?: string;
+    limit?: number;
+  }) => {
+    const query = new URLSearchParams();
+    if (params?.propertyId) query.set('propertyId', params.propertyId);
+    if (params?.collection) query.set('collection', params.collection);
+    if (params?.action) query.set('action', params.action);
+    if (params?.limit) query.set('limit', params.limit.toString());
+    const qs = query.toString();
+    return request<ActivityLogItem[]>(`/activity-logs${qs ? `?${qs}` : ''}`);
+  },
+
+  // Authentication & Session
+  login: (credentials: LoginCredentials) =>
+    request<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    }),
+  logout: () =>
+    request<{ success: boolean; message: string }>('/auth/logout', {
+      method: 'POST',
+    }),
+  getMe: () => request<AuthUser>('/auth/me'),
+  setAuthToken: (token: string | null) => {
+    currentToken = token;
+  },
+  setActiveCompanyId: (companyId: string) => {
+    currentCompanyId = companyId;
+  },
+  getActiveCompanyId: () => currentCompanyId,
+  setActiveUserId: (userId: string | null) => {
+    currentUserId = userId;
+  },
 };
+
 

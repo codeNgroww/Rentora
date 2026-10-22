@@ -1,9 +1,104 @@
 /**
- * Shared API contracts, DTO types, and domain models for Rental Property Management SaaS
+ * Shared API contracts, DTO types, and domain models for Rentora Rental SaaS
+ * Multi-Tenant SaaS with Super Admin Governance & Universal Activity Logging
  * Market: UAE (Default Currency: AED, Default Timezone: Asia/Dubai)
  */
 
-export type UserRole = 'owner' | 'manager' | 'accountant';
+export type UserRole =
+  | 'super_admin'
+  | 'admin'
+  | 'owner'
+  | 'manager'
+  | 'accountant'
+  | 'hr'
+  | 'viewer';
+
+export type AppModule =
+  | 'companies'
+  | 'properties'
+  | 'units'
+  | 'tenants'
+  | 'leases'
+  | 'expenses'
+  | 'rent'
+  | 'dashboard'
+  | 'reports'
+  | 'users'
+  | 'settings'
+  | 'activity_logs';
+
+export const ROLE_MODULE_PERMISSIONS: Record<UserRole, AppModule[]> = {
+  super_admin: [
+    'companies',
+    'properties',
+    'units',
+    'tenants',
+    'leases',
+    'expenses',
+    'rent',
+    'dashboard',
+    'reports',
+    'users',
+    'settings',
+    'activity_logs',
+  ],
+  admin: [
+    'properties',
+    'units',
+    'tenants',
+    'leases',
+    'expenses',
+    'rent',
+    'dashboard',
+    'reports',
+    'users',
+    'settings',
+    'activity_logs',
+  ],
+  owner: [
+    'properties',
+    'units',
+    'tenants',
+    'leases',
+    'expenses',
+    'rent',
+    'dashboard',
+    'reports',
+    'users',
+    'settings',
+    'activity_logs',
+  ],
+  manager: [
+    'properties',
+    'units',
+    'tenants',
+    'leases',
+    'dashboard',
+    'reports',
+    'activity_logs',
+  ],
+  accountant: [
+    'rent',
+    'expenses',
+    'dashboard',
+    'reports',
+    'properties',
+    'units',
+    'leases',
+  ],
+  hr: [
+    'users',
+    'dashboard',
+    'activity_logs',
+  ],
+  viewer: [
+    'dashboard',
+    'properties',
+    'units',
+    'leases',
+    'reports',
+  ],
+};
 
 export type UAEEmirate = 
   | 'Abu Dhabi'
@@ -16,6 +111,7 @@ export type UAEEmirate =
 
 export type PropertyType = 'residential' | 'commercial' | 'mixed_use' | 'villa' | 'apartment_building';
 export type UnitOccupancyStatus = 'vacant' | 'occupied' | 'under_maintenance';
+export type UnitType = 'residential' | 'commercial' | 'parking';
 
 export type LeaseStatus = 'draft' | 'active' | 'expiring' | 'ended' | 'terminated';
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
@@ -25,12 +121,39 @@ export type PaymentMethod = 'bank_transfer' | 'cash' | 'card' | 'cheque';
 
 export type RentChargeStatus = 'pending' | 'partially_paid' | 'paid' | 'overdue' | 'voided';
 
+export type ActivityAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'VOID' | string;
+
 export interface UserProfile {
   id: string;
   email: string;
   fullName: string;
+  phone?: string;
   avatarUrl?: string;
+  role?: UserRole;
   createdAt: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  companyId?: string | null;
+  companyName?: string;
+  phoneNumber?: string;
+  isSuperAdmin: boolean;
+  permissions?: AppModule[];
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  token: string;
+  isSuperAdmin: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password?: string;
 }
 
 export interface VatSettings {
@@ -40,32 +163,83 @@ export interface VatSettings {
   calculationMode: 'exclusive' | 'inclusive';
 }
 
-export interface Workspace {
+/**
+ * Company Point of Contact (POC)
+ */
+export interface CompanyPoc {
+  fullName: string;
+  email: string;
+  phone: string;
+}
+
+/**
+ * Tenant Organization / Company Model
+ */
+export interface Company {
   id: string;
   name: string;
-  slug: string;
-  defaultCurrency: string; // e.g., 'AED'
-  timeZone: string; // e.g., 'Asia/Dubai'
-  ownerId: string;
+  slug?: string;
+  tradeLicenseNo?: string;
+  trn?: string; // UAE Tax Registration Number
+  pocName?: string;
+  pocEmail?: string;
+  pocPhone?: string;
+  address?: string;
+  emirate?: UAEEmirate;
+  currency?: string; // Default 'AED'
+  defaultCurrency?: string; // Backwards compatible alias
+  timeZone?: string; // Default 'Asia/Dubai'
+  ownerId?: string; // Backwards compatible alias
+  status?: 'active' | 'suspended' | 'pending';
+  totalProperties?: number;
+  totalUnits?: number;
   vatSettings?: VatSettings;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface WorkspaceMember {
+/**
+ * Backwards compatibility alias for Workspace
+ */
+export type Workspace = Company;
+
+/**
+ * Universal User Model (Canonical table: users)
+ */
+export interface User {
   id: string;
-  workspaceId: string;
-  userId: string;
-  userEmail: string;
-  userName: string;
+  companyId?: string | null;
+  workspaceId?: string | null; // Backwards compatible alias
+  propertyId?: string | null;
+  userId?: string; // Backwards compatible alias for id
+  email?: string;
+  userEmail?: string; // Backwards compatible alias
+  fullName?: string;
+  userName?: string; // Backwards compatible alias
+  phoneNumber?: string;
+  userPhone?: string; // Backwards compatible alias
   role: UserRole;
   status: 'active' | 'invited' | 'suspended';
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
+  updatedAt?: string;
 }
+
+export type CompanyUser = User;
+export type WorkspaceMember = User;
 
 export interface Property {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string; // Same as id
   name: string;
   type: PropertyType;
   address: string;
@@ -75,15 +249,18 @@ export interface Property {
   totalUnits: number;
   notes?: string;
   isArchived: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type UnitType = 'residential' | 'commercial';
-
 export interface Unit {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
   propertyId: string;
   unitNumber: string;
   type?: UnitType;
@@ -94,19 +271,25 @@ export interface Unit {
   marketRent: string; // Fixed precision decimal string e.g. "75000.00"
   status: UnitOccupancyStatus;
   currentLeaseId?: string;
-  createdAt: string;
-  updatedAt: string;
   currentTenantName?: string;
   paymentStatus?: 'paid' | 'partially_paid' | 'pending' | 'overdue' | 'vacant';
   paidAmount?: string;
   dueAmount?: string;
   previousDuesMonths?: number;
   isShop?: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Tenant {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string;
   fullName: string;
   email: string;
   phoneNumber: string;
@@ -115,7 +298,12 @@ export interface Tenant {
   preferredContact: 'email' | 'phone' | 'whatsapp';
   emergencyContact?: string;
   notes?: string;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface ChequeScheduleItem {
@@ -129,10 +317,11 @@ export interface ChequeScheduleItem {
 
 export interface Lease {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string;
   unitId: string;
   unitIds?: string[];
-  propertyId: string;
   tenantId: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
@@ -144,47 +333,69 @@ export interface Lease {
   termsNotes?: string;
   contractUrl?: string;
   cheques?: ChequeScheduleItem[];
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ExpenseCategory {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string | null;
   name: string;
   color?: string; // hex color for badges
   isSystemDefault: boolean;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Vendor {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string | null;
   name: string;
   contactPerson?: string;
   email?: string;
   phone?: string;
   serviceCategory?: string;
   trnOrTaxId?: string; // UAE Tax Registration Number (TRN)
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt?: string;
 }
 
 export interface ExpenseAttachment {
   id: string;
+  companyId?: string;
+  propertyId?: string;
   expenseId: string;
   fileName: string;
   fileSize: number;
   fileType: string;
   storagePath: string;
   signedUrl?: string;
-  uploadedBy: string;
+  createdBy?: string;
+  updatedBy?: string;
+  uploadedBy?: string;
   uploadedAt: string;
 }
 
 export interface Expense {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
   propertyId: string;
   unitId?: string | null;
   categoryId: string;
@@ -200,15 +411,20 @@ export interface Expense {
   notes?: string;
   attachments?: ExpenseAttachment[];
   voidReason?: string;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface RentCharge {
   id: string;
-  workspaceId: string;
-  leaseId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
   propertyId: string;
+  leaseId: string;
   unitId: string;
   tenantId: string;
   periodStart: string; // YYYY-MM-DD
@@ -222,23 +438,32 @@ export interface RentCharge {
   invoiceNumber?: string;
   installmentIndex?: number;
   installmentTotal?: number;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface PaymentAllocation {
   id: string;
+  companyId?: string;
+  propertyId?: string;
   paymentId: string;
   rentChargeId: string;
   amount: string; // Fixed precision decimal string
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
 }
 
 export interface Payment {
   id: string;
-  workspaceId: string;
-  tenantId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
   propertyId: string;
+  tenantId: string;
   unitId: string;
   amount: string; // e.g. "20000.00"
   currency: string;
@@ -254,11 +479,17 @@ export interface Payment {
   proofUrl?: string; // Data URL or storage URL for attached payment proof
   proofName?: string; // File name e.g. "cheque_copy_102.pdf"
   invoiceNumber?: string; // e.g. "INV-2026-0042"
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface DashboardSummary {
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
   period: string; // e.g. "2026-10" or "2026"
   currency: string;
   propertyCount: number;
@@ -292,6 +523,7 @@ export interface DashboardSummary {
 
 export interface RentArrearsItem {
   rentChargeId: string;
+  companyId?: string;
   propertyId: string;
   propertyName: string;
   unitNumber: string;
@@ -324,26 +556,78 @@ export interface FinancialReportSummary {
 
 export interface NotificationItem {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string | null;
   userId: string;
   type: 'lease_expiring' | 'rent_overdue' | 'expense_pending' | 'system';
   title: string;
   message: string;
   isRead: boolean;
   linkUrl?: string;
+  createdBy?: string;
+  updatedBy?: string;
   createdAt: string;
 }
 
-export interface AuditLogItem {
+/**
+ * Universal Activity Log Item (Captures every mutation across all collections)
+ */
+export interface ActivityLogItem {
   id: string;
-  workspaceId: string;
+  companyId?: string;
+  workspaceId?: string; // Deprecated alias
+  propertyId?: string | null;
+  collectionName?: string; // e.g. 'units', 'leases', 'expenses'
+  entity?: string; // Backwards compatible alias
+  recordId?: string;
+  entityId?: string; // Backwards compatible alias
+  action: ActivityAction;
+  oldData?: Record<string, any> | null;
+  newData?: Record<string, any> | null;
+  diff?: Record<string, { from: any; to: any }> | null;
+  changes?: Record<string, { before: any; after: any }> | null;
   actorId: string;
   actorName: string;
-  action: string;
-  entity: string;
-  entityId: string;
-  timestamp: string;
-  changes?: Record<string, { before: any; after: any }>;
+  actorEmail?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  createdAt?: string;
+  timestamp?: string;
+}
+
+export type AuditLogItem = ActivityLogItem;
+
+/**
+ * Super Admin DTOs
+ */
+export interface CreateCompanyDto {
+  name: string;
+  tradeLicenseNo?: string;
+  trn?: string;
+  emirate?: UAEEmirate;
+  address?: string;
+  defaultCurrency?: string;
+  poc: {
+    fullName: string;
+    email: string;
+    password?: string;
+    phone: string;
+  };
+}
+
+export interface UpdateCompanyDto {
+  name?: string;
+  tradeLicenseNo?: string;
+  trn?: string;
+  emirate?: UAEEmirate;
+  address?: string;
+  status?: 'active' | 'suspended';
+  pocName?: string;
+  pocEmail?: string;
+  pocPhone?: string;
 }
 
 /**

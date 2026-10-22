@@ -41,18 +41,25 @@ export function DashboardScreen({
   const expensesPaid = parseFloat(activeSummary.expensesPaid || '0');
   const netCashFlow = parseFloat(activeSummary.netCashFlow || '0');
 
-  // Quarterly financial data (Once every 3 months cheque payments for 1-year contracts)
+  // Dynamically calculated quarterly financial data
+  const qRent = rentCollected > 0 ? rentCollected / 4 : 0;
+  const qExp = expensesPaid > 0 ? expensesPaid / 4 : 0;
+  const qNet = netCashFlow !== 0 ? netCashFlow / 4 : 0;
+  const clearedRatio = (rentCollected + rentOutstanding) > 0 
+    ? Math.round((rentCollected / (rentCollected + rentOutstanding)) * 100)
+    : 0;
+
   const quarterlyData = [
-    { quarter: 'Q1 (Jan - Mar)', rent: 53750, expenses: 6600, net: 47150, chequesCleared: '100%' },
-    { quarter: 'Q2 (Apr - Jun)', rent: 53750, expenses: 7200, net: 46550, chequesCleared: '100%' },
-    { quarter: 'Q3 (Jul - Sep)', rent: 53750, expenses: 5800, net: 47950, chequesCleared: '100%' },
-    { quarter: 'Q4 (Oct - Dec)', rent: rentCollected || 53750, expenses: expensesPaid || 6600, net: netCashFlow || 47150, chequesCleared: '85%' },
+    { quarter: 'Q1 (Jan - Mar)', rent: qRent, expenses: qExp, net: qNet, chequesCleared: `${clearedRatio}%` },
+    { quarter: 'Q2 (Apr - Jun)', rent: qRent, expenses: qExp, net: qNet, chequesCleared: `${clearedRatio}%` },
+    { quarter: 'Q3 (Jul - Sep)', rent: qRent, expenses: qExp, net: qNet, chequesCleared: `${clearedRatio}%` },
+    { quarter: 'Q4 (Oct - Dec)', rent: qRent, expenses: qExp, net: qNet, chequesCleared: `${clearedRatio}%` },
   ];
 
   // SVG dimensions for Bar Chart
   const svgWidth = 560;
   const svgHeight = 220;
-  const maxBarVal = 70000;
+  const maxBarVal = Math.max(70000, qRent * 1.5, qExp * 1.5, 1000);
 
   return (
     <div>
@@ -146,17 +153,17 @@ export function DashboardScreen({
       </div>
 
       {/* CHARTS ROW: Interactive SVG Financial & Cheque Status Charts */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.85fr', gap: '24px', marginBottom: '24px', alignItems: 'stretch' }}>
+      <div className="dashboard-charts-grid">
         {/* Chart 1: Quarterly Collections vs Expenses Bar Chart */}
         <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }}>
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="card-header dashboard-chart-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={18} color="#4f46e5" />
+              <BarChart3 size={18} color="#12a370" />
               <h3 className="card-title" style={{ margin: 0 }}>Quarterly Rent vs Expenses (Every 3 Months)</h3>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '11.5px' }}>
+            <div className="dashboard-chart-legend">
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '10px', height: '10px', background: '#4f46e5', borderRadius: '2px' }} />
+                <span style={{ width: '10px', height: '10px', background: '#12a370', borderRadius: '2px' }} />
                 Rent Cheques
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
@@ -284,17 +291,17 @@ export function DashboardScreen({
               </svg>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '14px', marginTop: '16px', fontSize: '12px', color: '#64748b' }}>
+            <div className="dashboard-chart-footer">
               <span>Cycle: <strong style={{ color: '#0f172a' }}>1-Year Tenancy Contracts</strong></span>
               <span>Cadence: <strong style={{ color: '#0f172a' }}>Once Every 3 Months (4 Cheques)</strong></span>
-              <span style={{ color: '#4f46e5', fontWeight: 600 }}>PDC Clearance: <strong style={{ color: '#4f46e5' }}>94.2%</strong></span>
+              <span style={{ color: '#12a370', fontWeight: 600 }}>PDC Clearance: <strong style={{ color: '#12a370' }}>94.2%</strong></span>
             </div>
           </div>
         </div>
 
         {/* Chart 2: 1-Year Cheques Clearance Status Donut Chart */}
         <div className="card" style={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }}>
-          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="card-header dashboard-chart-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <PieChart size={18} color="#0284c7" />
               <h3 className="card-title" style={{ margin: 0 }}>PDC Cheques Clearance</h3>
@@ -303,58 +310,48 @@ export function DashboardScreen({
           </div>
 
           <div className="card-body" style={{ padding: '20px 24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            {/* Center Donut Chart with clean, non-overlapping typography */}
+            {/* Center Donut Chart with dynamic real percentage */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '175px' }}>
               <svg width="175" height="175" viewBox="0 0 100 100">
                 {/* Background Track */}
                 <circle cx="50" cy="50" r="38" fill="none" stroke="#f1f5f9" strokeWidth="10" />
 
-                {/* Cleared Cheques (75% / 238.76 circum) */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  fill="none"
-                  stroke="#166534"
-                  strokeWidth="10"
-                  strokeDasharray="179 239"
-                  strokeDashoffset="0"
-                  transform="rotate(-90 50 50)"
-                  strokeLinecap="round"
-                  style={{ transition: 'all 0.3s ease' }}
-                />
+                {/* Cleared Cheques */}
+                {clearedRatio > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="none"
+                    stroke="#12a370"
+                    strokeWidth="10"
+                    strokeDasharray={`${Math.round((clearedRatio / 100) * 239)} 239`}
+                    strokeDashoffset="0"
+                    transform="rotate(-90 50 50)"
+                    strokeLinecap="round"
+                    style={{ transition: 'all 0.3s ease' }}
+                  />
+                )}
 
-                {/* Upcoming 3-Month PDCs (17% / 40.59) */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  fill="none"
-                  stroke="#0284c7"
-                  strokeWidth="10"
-                  strokeDasharray="41 239"
-                  strokeDashoffset="-179"
-                  transform="rotate(-90 50 50)"
-                  strokeLinecap="round"
-                />
+                {/* Pending / Overdue Cheques */}
+                {clearedRatio < 100 && (rentCollected + rentOutstanding) > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    fill="none"
+                    stroke="#dc2626"
+                    strokeWidth="10"
+                    strokeDasharray={`${Math.round(((100 - clearedRatio) / 100) * 239)} 239`}
+                    strokeDashoffset={`-${Math.round((clearedRatio / 100) * 239)}`}
+                    transform="rotate(-90 50 50)"
+                    strokeLinecap="round"
+                  />
+                )}
 
-                {/* Arrears / Pending Cheques (8% / 19.1) */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  fill="none"
-                  stroke="#dc2626"
-                  strokeWidth="10"
-                  strokeDasharray="19 239"
-                  strokeDashoffset="-220"
-                  transform="rotate(-90 50 50)"
-                  strokeLinecap="round"
-                />
-
-                {/* Center Text Readout: Perfectly fitted inside inner hole */}
+                {/* Center Text Readout */}
                 <text x="50" y="47" textAnchor="middle" fontSize="15" fontWeight="800" fill="#0f172a">
-                  75%
+                  {clearedRatio}%
                 </text>
                 <text x="50" y="58" textAnchor="middle" fontSize="7" fill="#64748b" fontWeight="700" letterSpacing="0.8">
                   CLEARED
@@ -366,18 +363,18 @@ export function DashboardScreen({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', fontSize: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#166534', flexShrink: 0 }} />
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#12a370', flexShrink: 0 }} />
                   <span style={{ color: '#475569', fontWeight: 500 }}>Cleared Bank Cheques</span>
                 </div>
-                <strong style={{ color: '#166534' }}>AED 161,250 (75%)</strong>
+                <strong style={{ color: '#12a370' }}>AED {rentCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({clearedRatio}%)</strong>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0284c7', flexShrink: 0 }} />
-                  <span style={{ color: '#475569', fontWeight: 500 }}>Upcoming 3-Month PDCs</span>
+                  <span style={{ color: '#475569', fontWeight: 500 }}>Upcoming / Scheduled</span>
                 </div>
-                <strong style={{ color: '#0284c7' }}>AED 36,250 (17%)</strong>
+                <strong style={{ color: '#0284c7' }}>AED {(qRent * 2).toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -385,7 +382,7 @@ export function DashboardScreen({
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#dc2626', flexShrink: 0 }} />
                   <span style={{ color: '#475569', fontWeight: 500 }}>Pending / In Transit</span>
                 </div>
-                <strong style={{ color: '#dc2626' }}>AED 17,500 (8%)</strong>
+                <strong style={{ color: '#dc2626' }}>AED {rentOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({rentCollected + rentOutstanding > 0 ? 100 - clearedRatio : 0}%)</strong>
               </div>
             </div>
           </div>
@@ -396,7 +393,7 @@ export function DashboardScreen({
       <div className="card" style={{ marginBottom: '24px', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '18px 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <CalendarCheck size={18} color="#4f46e5" />
+            <CalendarCheck size={18} color="#12a370" />
             <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
               Quarterly Cheque Clearance Pipeline (Once Every 3 Months)
             </h4>
@@ -404,47 +401,55 @@ export function DashboardScreen({
           <span className="badge badge-indigo" style={{ fontSize: '11px' }}>4 Cheques per 1-Year Contract</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
+        <div className="dashboard-pipeline-grid">
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Q1 Cheques (Month 1)</span>
-              <span className="badge badge-green" style={{ fontSize: '10px', padding: '2px 8px' }}>Cleared</span>
+              <span className={`badge ${rentCollected > 0 ? 'badge-green' : 'badge-yellow'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                {rentCollected > 0 ? 'Cleared' : 'Scheduled'}
+              </span>
             </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED 53,750.00</div>
-            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Emirates NBD & ADCB</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED {qRent.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Direct Bank Deposit</div>
           </div>
 
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Q2 Cheques (Month 4)</span>
-              <span className="badge badge-green" style={{ fontSize: '10px', padding: '2px 8px' }}>Cleared</span>
+              <span className={`badge ${rentCollected > 0 ? 'badge-green' : 'badge-yellow'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                {rentCollected > 0 ? 'Cleared' : 'Scheduled'}
+              </span>
             </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED 53,750.00</div>
-            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Emirates Islamic & DIB</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED {qRent.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Direct Bank Deposit</div>
           </div>
 
           <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>Q3 Cheques (Month 7)</span>
-              <span className="badge badge-green" style={{ fontSize: '10px', padding: '2px 8px' }}>Cleared</span>
+              <span className={`badge ${rentCollected > 0 ? 'badge-green' : 'badge-yellow'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                {rentCollected > 0 ? 'Cleared' : 'Scheduled'}
+              </span>
             </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED 53,750.00</div>
-            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Mashreq & FAB</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>AED {qRent.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>Direct Bank Deposit</div>
           </div>
 
-          <div style={{ background: '#ffffff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(79, 70, 229, 0.08)' }}>
+          <div style={{ background: '#ffffff', border: '1px solid #c7d2fe', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 8px rgba(18, 163, 112, 0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#4f46e5' }}>Q4 Cheques (Month 10)</span>
-              <span className="badge badge-yellow" style={{ fontSize: '10px', padding: '2px 8px' }}>In Clearance</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#12a370' }}>Q4 Cheques (Month 10)</span>
+              <span className={`badge ${rentOutstanding > 0 ? 'badge-yellow' : 'badge-green'}`} style={{ fontSize: '10px', padding: '2px 8px' }}>
+                {rentOutstanding > 0 ? 'Pending' : 'Scheduled'}
+              </span>
             </div>
-            <div style={{ fontSize: '17px', fontWeight: 800, color: '#4f46e5' }}>AED 57,500.00</div>
+            <div style={{ fontSize: '17px', fontWeight: 800, color: '#12a370' }}>AED {(rentOutstanding > 0 ? rentOutstanding : qRent).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
             <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '6px' }}>PDC cheques maturing</div>
           </div>
         </div>
       </div>
 
       {/* Two Column Section: Recent Activity & Expense Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.75fr', gap: '24px', alignItems: 'stretch' }}>
+      <div className="dashboard-bottom-grid">
         {/* Recent Activity */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', marginBottom: 0 }}>
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

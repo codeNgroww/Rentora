@@ -30,6 +30,7 @@ interface ExpensesScreenProps {
   properties: Property[];
   units: Unit[];
   period: string;
+  revenueCollected?: number;
   timeframeFilter?: TimeframeFilter;
   onTimeframeChange?: (tf: TimeframeFilter) => void;
   onOpenAddModal: () => void;
@@ -45,6 +46,7 @@ export function ExpensesScreen({
   properties,
   units,
   period,
+  revenueCollected = 0,
   timeframeFilter,
   onTimeframeChange,
   onOpenAddModal,
@@ -89,8 +91,8 @@ export function ExpensesScreen({
     .filter((e) => e.status === 'pending')
     .reduce((sum, e) => sum + parseFloat(e.amount), 0);
 
-  // Hardcoded revenue collected reference for October period for net income display
-  const monthlyRevenue = 53750.0;
+  // Revenue collected from rent for period net income display
+  const monthlyRevenue = revenueCollected;
   const netIncome = monthlyRevenue - totalPaidNum;
 
   // Category breakdown

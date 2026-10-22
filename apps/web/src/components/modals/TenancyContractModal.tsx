@@ -4,6 +4,7 @@ import React, { useRef } from 'react';
 import { Lease, Tenant, Property, Unit } from '@rental-saas/contracts';
 import { Printer, Download, X, Shield, FileCheck, CheckCircle2 } from 'lucide-react';
 import { RentoraLogo } from '../RentoraLogo';
+import { useAuth } from '../../lib/AuthContext';
 
 interface TenancyContractModalProps {
   lease: Lease;
@@ -21,6 +22,9 @@ export function TenancyContractModal({
   onClose,
 }: TenancyContractModalProps) {
   const contractRef = useRef<HTMLDivElement>(null);
+  const { activeCompanyName, user } = useAuth();
+  const landlordCompany = activeCompanyName || 'Rentora';
+  const landlordRepresentative = user?.fullName || 'Authorized Signatory';
 
   const rentNum = parseFloat(lease.annualRent) || 0;
   const vatRate = 5.0; // 5% UAE standard VAT
@@ -273,23 +277,23 @@ export function TenancyContractModal({
                   <tbody>
                     <tr>
                       <td style={{ color: '#64748b', width: '38%', padding: '4px 0' }}>Company / Name:</td>
-                      <td style={{ fontWeight: 600, padding: '4px 0' }}>Al Reem Properties LLC</td>
+                      <td style={{ fontWeight: 600, padding: '4px 0' }}>{landlordCompany}</td>
                     </tr>
                     <tr>
                       <td style={{ color: '#64748b', padding: '4px 0' }}>Trade License / TRN:</td>
-                      <td style={{ fontWeight: 600, padding: '4px 0' }}>100293849500003 (FTA UAE)</td>
+                      <td style={{ fontWeight: 600, padding: '4px 0' }}>Verified FTA Tax Registered</td>
                     </tr>
                     <tr>
                       <td style={{ color: '#64748b', padding: '4px 0' }}>Represented By:</td>
-                      <td style={{ fontWeight: 600, padding: '4px 0' }}>Sultan Al Nuaimi (Owner)</td>
+                      <td style={{ fontWeight: 600, padding: '4px 0' }}>{landlordRepresentative}</td>
                     </tr>
                     <tr>
                       <td style={{ color: '#64748b', padding: '4px 0' }}>Contact Phone:</td>
-                      <td style={{ fontWeight: 600, padding: '4px 0' }}>+971 4 399 2200</td>
+                      <td style={{ fontWeight: 600, padding: '4px 0' }}>{user?.phoneNumber || '+971 4 000 0000'}</td>
                     </tr>
                     <tr>
                       <td style={{ color: '#64748b', padding: '4px 0' }}>Official Email:</td>
-                      <td style={{ fontWeight: 600, padding: '4px 0' }}>leasing@alreem.ae</td>
+                      <td style={{ fontWeight: 600, padding: '4px 0' }}>{user?.email || 'leasing@rentora.ae'}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -482,18 +486,18 @@ export function TenancyContractModal({
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginTop: '28px', paddingTop: '16px', borderTop: '2px solid #e2e8f0' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontFamily: 'cursive', fontSize: '18px', color: '#4f46e5' }}>Sultan Al Nuaimi</span>
+                  <span style={{ fontFamily: 'cursive', fontSize: '18px', color: '#4f46e5' }}>{landlordRepresentative}</span>
                 </div>
                 <div style={{ borderTop: '1px dashed #94a3b8', paddingTop: '6px', fontSize: '11.5px', fontWeight: 600 }}>
                   First Party (Landlord / Lessor)<br />
-                  <span style={{ fontSize: '10.5px', color: '#64748b' }}>Al Reem Properties LLC</span>
+                  <span style={{ fontSize: '10.5px', color: '#64748b' }}>{landlordCompany}</span>
                 </div>
               </div>
 
               <div style={{ textAlign: 'center' }}>
                 <div style={{ height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <span style={{ fontFamily: 'cursive', fontSize: '18px', color: '#0284c7' }}>
-                    {tenant?.fullName || 'Alexander Wright'}
+                    {tenant?.fullName || 'Tenant'}
                   </span>
                 </div>
                 <div style={{ borderTop: '1px dashed #94a3b8', paddingTop: '6px', fontSize: '11.5px', fontWeight: 600 }}>

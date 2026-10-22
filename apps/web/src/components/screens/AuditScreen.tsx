@@ -74,8 +74,10 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
     const amountVal = changes.amount?.after || changes.amount?.before;
     const descVal = changes.description?.after;
     const reasonVal = changes.reason?.after || changes.reason?.before;
+    const actionStr = (log.action || '').toString();
+    const entityName = log.entity || log.collectionName || 'record';
 
-    if (log.action.includes('PAYMENT_RECORDED')) {
+    if (actionStr.includes('PAYMENT_RECORDED')) {
       const tenantName = changes.tenantId?.after ? formatValue('tenantId', changes.tenantId.after) : '';
       const amtStr = amountVal ? formatValue('amount', amountVal) : '';
       return {
@@ -84,7 +86,7 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
       };
     }
 
-    if (log.action.includes('EXPENSE_CREATED')) {
+    if (actionStr.includes('EXPENSE_CREATED')) {
       const amtStr = amountVal ? formatValue('amount', amountVal) : '';
       return {
         text: `Created new expense${descVal ? ` "${descVal}"` : ''}${amtStr ? ` for ${amtStr}` : ''}`,
@@ -92,14 +94,14 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
       };
     }
 
-    if (log.action.includes('EXPENSE_VOIDED') || log.action.includes('VOID')) {
+    if (actionStr.includes('EXPENSE_VOIDED') || actionStr.includes('VOID')) {
       return {
         text: `Cancelled / voided expense${reasonVal ? ` (Reason: ${reasonVal})` : ''}`,
         icon: '🚫',
       };
     }
 
-    if (log.action.includes('LEASE')) {
+    if (actionStr.includes('LEASE')) {
       return {
         text: `Issued 1-year tenancy contract agreement`,
         icon: '📑',
@@ -107,7 +109,7 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
     }
 
     return {
-      text: `${log.action.replace(/_/g, ' ')} on ${log.entity}`,
+      text: `${actionStr.replace(/_/g, ' ')} on ${entityName}`,
       icon: 'ℹ️',
     };
   };
@@ -157,25 +159,37 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
                     const changeEntries = Object.entries(changes);
                     const isRawOpen = expandedRawLogs[log.id];
 
+                    const rawTs = (log.timestamp || log.createdAt || (log as any).created_at || '').toString();
+                    const datePart = rawTs.length >= 10 ? rawTs.slice(0, 10) : (rawTs || 'Recent');
+                    const timePart = rawTs.length >= 19 ? `${rawTs.slice(11, 19)} UTC` : '';
+
+                    const actorName = log.actorName || log.actorEmail || 'System';
+                    const entityName = log.entity || log.collectionName || 'Record';
+                    const rawEntityId = (log.entityId || log.recordId || log.id || '').toString();
+                    const shortEntityId = rawEntityId.length >= 8 ? rawEntityId.slice(0, 8) : rawEntityId;
+                    const actionStr = (log.action || 'ACTIVITY').toString();
+
                     return (
                       <tr key={log.id} style={{ verticalAlign: 'top' }}>
                         {/* Timestamp */}
                         <td style={{ whiteSpace: 'nowrap', fontSize: '12px', color: '#64748b' }}>
                           <div style={{ fontWeight: 600, color: '#334155' }}>
-                            {log.timestamp.slice(0, 10)}
+                            {datePart}
                           </div>
-                          <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                            {log.timestamp.slice(11, 19)} UTC
-                          </div>
+                          {timePart && (
+                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                              {timePart}
+                            </div>
+                          )}
                         </td>
 
                         {/* Actor */}
                         <td>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '13px' }}>
-                            {log.actorName}
+                            {actorName}
                           </div>
                           <div style={{ fontSize: '11px', color: '#64748b' }}>
-                            {log.entity} #{log.entityId.slice(0, 8)}
+                            {entityName} {shortEntityId ? `#${shortEntityId}` : ''}
                           </div>
                         </td>
 
@@ -183,15 +197,15 @@ export function AuditScreen({ logs, tenants = [], properties = [], units = [] }:
                         <td>
                           <span
                             className={`badge ${
-                              log.action.includes('VOID')
+                              actionStr.includes('VOID')
                                 ? 'badge-red'
-                                : log.action.includes('PAYMENT')
+                                : actionStr.includes('PAYMENT')
                                 ? 'badge-green'
                                 : 'badge-blue'
                             }`}
                             style={{ fontSize: '11px', padding: '4px 8px' }}
                           >
-                            {log.action.replace(/_/g, ' ')}
+                            {actionStr.replace(/_/g, ' ')}
                           </span>
                         </td>
 

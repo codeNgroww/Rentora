@@ -52,10 +52,10 @@ export function BuildingView({
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null);
 
   const uniqueFloors = Array.from(new Set(units.map((u) => u.floor || '1st Floor')));
-  const standardOrder = ['5th Floor', '4th Floor', '3rd Floor', '2nd Floor', '1st Floor', 'Ground Floor'];
-  const floorOrder = standardOrder.filter((f) => uniqueFloors.includes(f));
-  uniqueFloors.forEach((f) => {
-    if (!floorOrder.includes(f)) floorOrder.push(f);
+  const floorOrder = [...uniqueFloors].sort((a, b) => {
+    const numA = parseInt(a.replace(/[^0-9]/g, ''), 10) || (a.toLowerCase().includes('ground') ? 0 : -1);
+    const numB = parseInt(b.replace(/[^0-9]/g, ''), 10) || (b.toLowerCase().includes('ground') ? 0 : -1);
+    return numB - numA;
   });
 
   // Format period for display
@@ -118,8 +118,7 @@ export function BuildingView({
             Building View
           </h2>
           <p style={{ fontSize: '13.5px', color: '#64748b' }}>
-            Visual map of all {units.filter((u) => !u.isShop).length} rooms and{' '}
-            {units.filter((u) => u.isShop).length || 1} shop for {periodShort} — click any unit for details.
+            Visual map of {units.length} units ({units.filter((u) => u.type === 'residential' || (!u.type && !u.isShop)).length} residential{units.some((u) => u.type === 'commercial' || u.isShop) ? `, ${units.filter((u) => u.type === 'commercial' || u.isShop).length} commercial` : ''}{units.some((u) => u.type === 'parking') ? `, ${units.filter((u) => u.type === 'parking').length} parking` : ''}) for {periodShort} — click any unit for details.
           </p>
         </div>
 
@@ -379,9 +378,10 @@ export function BuildingView({
             const floorUnits = units.filter((u) => u.floor === floorName);
             if (floorUnits.length === 0) return null;
 
-            // Extract floor number label: '5', '4', '3', '2', '1', 'G'
-            const floorLabel = floorName.startsWith('Ground') ? 'G' : floorName.charAt(0);
-            const floorSub = floorName.startsWith('Ground') ? 'GROUND' : 'FLOOR';
+            // Extract floor number label: e.g. '12', '5', 'G'
+            const floorNumMatch = floorName.match(/\d+/);
+            const floorLabel = floorName.toLowerCase().includes('ground') ? 'G' : floorNumMatch ? floorNumMatch[0] : floorName.charAt(0);
+            const floorSub = floorName.toLowerCase().includes('ground') ? 'GROUND' : 'FLOOR';
 
             return (
               <div
@@ -506,7 +506,12 @@ export function BuildingView({
                         {/* Top row: Unit # and status dot */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#0f172a' }}>
-                            {u.isShop ? (
+                            {u.type === 'parking' ? (
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Car size={13} color="#475569" />
+                                {u.unitNumber}
+                              </span>
+                            ) : u.isShop || u.type === 'commercial' ? (
                               <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Store size={13} color="#166534" />
                                 {u.unitNumber}
@@ -817,7 +822,9 @@ export function BuildingView({
                 <div>
                   <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Unit Type</div>
                   <div style={{ fontWeight: 700, fontSize: '13px', color: '#0369a1' }}>
-                    {selectedUnit.type === 'commercial' || selectedUnit.isShop
+                    {selectedUnit.type === 'parking'
+                      ? 'Parking Space'
+                      : selectedUnit.type === 'commercial' || selectedUnit.isShop
                       ? 'Commercial'
                       : `${selectedUnit.bedrooms || 1} Bed • ${selectedUnit.bathrooms || 1} Bath`}
                   </div>

@@ -1,50 +1,35 @@
-import { Controller, Get, Patch, Param, Headers, Query } from '@nestjs/common';
-import { DataStoreService } from '../../database/data-store.service';
+import { Controller, Get, Patch, Param, Query } from '@nestjs/common';
+import { CompanyId } from '../../common/decorators/company-id.decorator';
+import { NotificationsAuditService } from './notifications-audit.service';
 
 @Controller()
 export class NotificationsAuditController {
-  constructor(private readonly dataStore: DataStoreService) {}
-
-  private getEffectiveWsId(wsId?: string): string {
-    return wsId || this.dataStore.workspaces[0]?.id || 'w1111111-1111-4111-8111-111111111111';
-  }
+  constructor(private readonly notificationsAuditService: NotificationsAuditService) {}
 
   @Get('notifications')
-  listNotifications(@Headers('x-workspace-id') wsId?: string) {
-    const effectiveWsId = this.getEffectiveWsId(wsId);
-    const items = this.dataStore.notifications.filter((n) => n.workspaceId === effectiveWsId);
+  listNotifications(@CompanyId() companyId?: string) {
+    const data = this.notificationsAuditService.listNotifications(companyId);
     return {
       success: true,
-      data: items,
+      data,
     };
   }
 
   @Patch('notifications/:id/read')
-  markAsRead(@Param('id') id: string, @Headers('x-workspace-id') wsId?: string) {
-    const effectiveWsId = this.getEffectiveWsId(wsId);
-    const item = this.dataStore.notifications.find(
-      (n) => n.id === id && n.workspaceId === effectiveWsId
-    );
-    if (item) {
-      item.isRead = true;
-      this.dataStore.saveToFile();
-    }
+  markAsRead(@Param('id') id: string, @CompanyId() companyId?: string) {
+    const data = this.notificationsAuditService.markAsRead(id, companyId);
     return {
       success: true,
-      data: item,
+      data,
     };
   }
 
   @Get('audit-logs')
-  listAuditLogs(@Headers('x-workspace-id') wsId?: string, @Query('limit') limit?: string) {
-    const effectiveWsId = this.getEffectiveWsId(wsId);
-    const max = limit ? parseInt(limit, 10) : 50;
-    const logs = this.dataStore.auditLogs
-      .filter((a) => a.workspaceId === effectiveWsId)
-      .slice(0, max);
+  listAuditLogs(@CompanyId() companyId?: string, @Query('limit') limit?: string) {
+    const data = this.notificationsAuditService.listAuditLogs(companyId, limit);
     return {
       success: true,
-      data: logs,
+      data,
     };
   }
 }
