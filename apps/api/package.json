@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "pnpm --filter @rental-saas/contracts build",
+    "predev": "pnpm --filter @rental-saas/contracts build",
+    "pretest": "pnpm --filter @rental-saas/contracts build",
     "build": "nest build || tsc",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",

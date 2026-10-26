@@ -4,6 +4,9 @@
   "private": true,
   "description": "Multi-tenant Rental Property Management SaaS for the UAE market",
   "scripts": {
+    "predev": "pnpm --filter @rental-saas/contracts build",
+    "prebuild": "pnpm --filter @rental-saas/contracts build",
+    "pretest": "pnpm --filter @rental-saas/contracts build",
     "dev": "pnpm --parallel run dev",
     "build": "pnpm --recursive run build",
     "test": "pnpm --recursive run test",

@@ -174,14 +174,14 @@ export function AuthScreen() {
             {/* Floating headline on image top right */}
             <div className="havenix-showcase-headline-wrap">
               <h2 className="havenix-showcase-headline">
-                Browse thousands of properties to buy, sell, or rent with trusted agents.
+                Empowering property managers with intelligent leasing, automated rent tracking, and UAE compliance.
               </h2>
             </div>
 
             {/* Floating UAE compliance pill badge at bottom */}
             <div className="havenix-showcase-bottom-badge">
               <span className="havenix-flag">🇦🇪</span>
-              <span>UAE Smart Property & Expense Cloud • RERA & FTA Certified</span>
+              <span>UAE Smart Property & Expense Cloud </span>
             </div>
           </div>
         </div>

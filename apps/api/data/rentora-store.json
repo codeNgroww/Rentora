@@ -1,6 +1,25 @@
 {
   "companies": [
     {
+      "id": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "name": "Al Futhaim ",
+      "tradeLicenseNo": "234564w3q2",
+      "trn": "23432424",
+      "pocName": "Rizwan V K",
+      "pocEmail": "rizwanvk98@gmail.com",
+      "pocPhone": "+971509536609",
+      "address": "14 th floor",
+      "emirate": "Dubai",
+      "currency": "AED",
+      "timeZone": "Asia/Dubai",
+      "status": "active",
+      "isDeleted": false,
+      "createdBy": "00000000-0000-0000-0000-000000000001",
+      "updatedBy": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-10-23T10:41:52.304Z",
+      "updatedAt": "2026-10-23T10:41:52.304Z"
+    },
+    {
       "id": "c1111111-1111-4111-8111-111111111111",
       "name": "Majid Al futhaim",
       "tradeLicenseNo": "TN1239894899",
@@ -44,6 +63,24 @@
       "status": "active",
       "isDeleted": false,
       "createdAt": "2026-10-22T18:40:59.696Z"
+    },
+    {
+      "id": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "companyId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "workspaceId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "userId": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "fullName": "Rizwan V K",
+      "userName": "Rizwan V K",
+      "email": "rizwanvk98@gmail.com",
+      "userEmail": "rizwanvk98@gmail.com",
+      "phoneNumber": "+971509536609",
+      "userPhone": "+971509536609",
+      "role": "admin",
+      "status": "active",
+      "isDeleted": false,
+      "createdBy": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-10-23T10:41:52.304Z",
+      "updatedAt": "2026-10-23T10:41:52.304Z"
     }
   ],
   "companyUsers": [
@@ -72,6 +109,24 @@
       "status": "active",
       "isDeleted": false,
       "createdAt": "2026-10-22T18:40:59.696Z"
+    },
+    {
+      "id": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "companyId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "workspaceId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "userId": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "fullName": "Rizwan V K",
+      "userName": "Rizwan V K",
+      "email": "rizwanvk98@gmail.com",
+      "userEmail": "rizwanvk98@gmail.com",
+      "phoneNumber": "+971509536609",
+      "userPhone": "+971509536609",
+      "role": "admin",
+      "status": "active",
+      "isDeleted": false,
+      "createdBy": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-10-23T10:41:52.304Z",
+      "updatedAt": "2026-10-23T10:41:52.304Z"
     }
   ],
   "workspaces": [
@@ -119,6 +174,24 @@
       "status": "active",
       "isDeleted": false,
       "createdAt": "2026-10-22T18:40:59.696Z"
+    },
+    {
+      "id": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "companyId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "workspaceId": "3dc9c429-a39b-4ca9-949f-5b8f466b06bb",
+      "userId": "e7d57312-53f2-4f44-96b1-2339bcb97968",
+      "fullName": "Rizwan V K",
+      "userName": "Rizwan V K",
+      "email": "rizwanvk98@gmail.com",
+      "userEmail": "rizwanvk98@gmail.com",
+      "phoneNumber": "+971509536609",
+      "userPhone": "+971509536609",
+      "role": "admin",
+      "status": "active",
+      "isDeleted": false,
+      "createdBy": "00000000-0000-0000-0000-000000000001",
+      "createdAt": "2026-10-23T10:41:52.304Z",
+      "updatedAt": "2026-10-23T10:41:52.304Z"
     }
   ],
   "properties": [
@@ -473,5 +546,5 @@
   "allocations": [],
   "notifications": [],
   "auditLogs": [],
-  "updatedAt": "2026-10-22T20:50:06.859Z"
+  "updatedAt": "2026-10-23T10:42:00.616Z"
 }
